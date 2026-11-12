@@ -1,11 +1,22 @@
 'use client';
 
 import { memo, useMemo, useState } from 'react';
-import { Badge, Breadcrumb, Button, Container, Dropdown, Form, Table } from 'react-bootstrap';
+import {
+  Badge,
+  Breadcrumb,
+  Button,
+  Container,
+  Dropdown,
+  Form,
+  Pagination,
+  Table,
+} from 'react-bootstrap';
 import {
   icsCourses,
   courseLevel,
+  courseNumber,
   courseParticipation,
+  DEGREE_PATHWAYS,
   type IcsCourse,
   type Participation,
 } from '@/data/icsCourses';
@@ -13,6 +24,8 @@ import {
 const LEVELS = ['All', '100-Level', '200-Level', '300-Level', '400-Level', 'Graduate'];
 const PARTICIPATION: ('Any' | Participation)[] = ['Any', 'In-Person', 'Hybrid', 'Online'];
 const CREDIT_OPTIONS = [1, 2, 3, 4];
+const PAGE_SIZE = 10;
+const UH_BADGE_STYLE = { backgroundColor: '#024731' } as const;
 
 /** Summarizes selected credit values: contiguous runs as ranges ("1-2"),
  *  non-contiguous values individually ("1, 3"). Empty -> "Any". */
@@ -36,18 +49,102 @@ const creditsSummary = (selected: number[]): string => {
   return parts.join(', ');
 };
 
+interface SchedulePattern {
+  label: string;
+  location?: string;
+  online: boolean;
+}
+
+/** Converts "9:00 AM"/"1:30 PM" style times to 24-hour "09:00"/"13:30". */
+const to24h = (s: string): string =>
+  s.replace(/\b(\d{1,2}):(\d{2})\s*(AM|PM)\b/gi, (_, h, m, ap) => {
+    let hour = parseInt(h, 10) % 12;
+    if (/pm/i.test(ap)) hour += 12;
+    return `${String(hour).padStart(2, '0')}:${m}`;
+  });
+
+const scheduleCache = new Map<string, SchedulePattern[]>();
+
+/** Splits a schedule string ("MW 9:00 AM - 10:15 AM, UHM KUY 101 + Online
+ *  async") into meeting patterns with building locations separated out.
+ *  Results are cached since many sections share identical schedule strings. */
+const parseSchedule = (schedule: string | undefined): SchedulePattern[] => {
+  if (!schedule) return [];
+  const cached = scheduleCache.get(schedule);
+  if (cached) return cached;
+  const patterns = schedule.split(' + ').map((raw) => {
+    const part = raw.trim();
+    const idx = part.indexOf(', UHM');
+    if (idx !== -1) {
+      return {
+        label: to24h(part.slice(0, idx)),
+        location: part.slice(idx + 2),
+        online: false,
+      };
+    }
+    const cidx = part.lastIndexOf(', ');
+    if (cidx !== -1 && /^online/i.test(part.slice(cidx + 2))) {
+      return { label: to24h(part.slice(0, cidx)), online: true };
+    }
+    return { label: to24h(part), online: /^online/i.test(part) };
+  });
+  scheduleCache.set(schedule, patterns);
+  return patterns;
+};
+
+const ScheduleList = ({ patterns }: { patterns: SchedulePattern[] }) => {
+  if (patterns.length <= 1) return <>{patterns[0]?.label ?? '—'}</>;
+  const onsite = patterns.filter((p) => !p.online);
+  const online = patterns.filter((p) => p.online);
+  return (
+    <ul className="list-unstyled mb-0">
+      {[...onsite, ...online].map((p, i) => (
+        <li key={`${p.label}-${i}`}>
+          <span aria-hidden="true" className="me-1">
+            {p.online ? '◦' : '•'}
+          </span>
+          {p.label}
+        </li>
+      ))}
+    </ul>
+  );
+};
+
 const CourseRow = memo(function CourseRow({ course }: { course: IcsCourse }) {
+  const patterns = parseSchedule(course.schedule);
+  const locations = [
+    ...new Set(patterns.map((p) => p.location).filter((l): l is string => !!l)),
+  ];
+  if (patterns.some((p) => p.online)) locations.push('Online');
   return (
     <tr>
-      <td className="text-nowrap fw-semibold">{course.code}</td>
+      <td className="text-nowrap fw-semibold">
+        {course.code}
+        {course.crn && (
+          <div className="text-muted small fw-normal">
+            CRN {course.crn}
+            {course.section && ` · Sec ${course.section}`}
+          </div>
+        )}
+      </td>
       <td>
         {course.title}
-        {course.notes && <div className="text-muted small mt-1">{course.notes}</div>}
+        {course.description && (
+          <div className="text-muted small course-description mt-1">
+            {course.description}
+          </div>
+        )}
+        {course.notes && (
+          <div className="text-muted small mt-1 fst-italic">{course.notes}</div>
+        )}
       </td>
-      <td className="text-nowrap">{course.credits}</td>
+      <td className="text-center text-nowrap">{course.credits}</td>
       <td>{course.faculty ?? '—'}</td>
-      <td className="small">{course.schedule ?? '—'}</td>
-      <td className="text-nowrap">{course.rating ?? '—'}</td>
+      <td className="small">
+        <ScheduleList patterns={patterns} />
+      </td>
+      <td className="small">{locations.length ? locations.join(', ') : '—'}</td>
+      <td className="text-nowrap">{courseParticipation(course)}</td>
       <td className="small">{course.prerequisites ?? 'None'}</td>
     </tr>
   );
@@ -59,6 +156,7 @@ interface Filters {
   participation: 'Any' | Participation;
   credits: number[];
   professor: string;
+  pathway: string;
 }
 
 const DEFAULT_FILTERS: Filters = {
@@ -67,6 +165,7 @@ const DEFAULT_FILTERS: Filters = {
   participation: 'Any',
   credits: [],
   professor: 'Any',
+  pathway: 'Any',
 };
 
 /** The ICS course browser page, styled after the Harvard DCE course catalog. */
@@ -74,6 +173,7 @@ const CourseBrowser = () => {
   // Draft filter values - results only update when "Apply Filters" is clicked.
   const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
   const [applied, setApplied] = useState<Filters>(DEFAULT_FILTERS);
+  const [page, setPage] = useState(1);
 
   const setFilter = <K extends keyof Filters>(key: K, value: Filters[K]) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -88,7 +188,10 @@ const CourseBrowser = () => {
 
   const allCreditsChecked = filters.credits.length === CREDIT_OPTIONS.length;
 
-  const applyFilters = () => setApplied({ ...filters });
+  const applyFilters = () => {
+    setApplied({ ...filters });
+    setPage(1);
+  };
 
   const professors = useMemo(() => {
     const names = new Set<string>();
@@ -98,9 +201,18 @@ const CourseBrowser = () => {
     return ['Any', ...[...names].sort()];
   }, []);
 
+  const activePathway = useMemo(
+    () => DEGREE_PATHWAYS.find((p) => p.key === applied.pathway),
+    [applied.pathway]
+  );
+
   const filtered = useMemo(() => {
     const q = applied.query.trim().toLowerCase();
+    const pathwayNums = activePathway
+      ? new Set(activePathway.courses.map(courseNumber))
+      : null;
     return icsCourses.filter((c) => {
+      if (pathwayNums && !pathwayNums.has(courseNumber(c.code))) return false;
       if (applied.level !== 'All' && courseLevel(c.code) !== applied.level) return false;
       if (applied.participation !== 'Any' && courseParticipation(c) !== applied.participation)
         return false;
@@ -114,16 +226,22 @@ const CourseBrowser = () => {
         .filter(Boolean)
         .some((field) => field!.toLowerCase().includes(q));
     });
-  }, [applied]);
+  }, [applied, activePathway]);
+
+  const pageCount = Math.ceil(filtered.length / PAGE_SIZE);
+  const paged = useMemo(
+    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filtered, page]
+  );
 
   const groups = useMemo(() => {
     const map = new Map<string, IcsCourse[]>();
-    for (const c of filtered) {
+    for (const c of paged) {
       const lvl = courseLevel(c.code);
       map.set(lvl, [...(map.get(lvl) ?? []), c]);
     }
     return [...map.entries()];
-  }, [filtered]);
+  }, [paged]);
 
   return (
     <main>
@@ -135,8 +253,8 @@ const CourseBrowser = () => {
         <h1 className="text-center">Search ICS Courses</h1>
         <p className="text-muted text-center">
           University of Hawaiʻi at Mānoa &mdash; Information and Computer Sciences.
-          Typical schedules, faculty, and student ratings compiled from Star GPS and course evaluations.{' '}
-          <Badge style={{ backgroundColor: '#024731' }}>UH Mānoa</Badge>
+          Spring 2027 schedules and faculty compiled from Star GPS (Jan 11 &ndash; May 14, 2027).{' '}
+          <Badge style={UH_BADGE_STYLE}>UH Mānoa</Badge>
         </p>
 
         <div className="d-flex justify-content-center">
@@ -193,6 +311,20 @@ const CourseBrowser = () => {
             ))}
           </Form.Select>
 
+          <Form.Select
+            value={filters.pathway}
+            onChange={(e) => setFilter('pathway', e.target.value)}
+            style={{ width: 'auto' }}
+            aria-label="Filter by degree pathway"
+          >
+            <option value="Any">Any Pathway</option>
+            {DEGREE_PATHWAYS.map((p) => (
+              <option key={p.key} value={p.key}>
+                {p.label}
+              </option>
+            ))}
+          </Form.Select>
+
           <Dropdown autoClose={false}>
             <Dropdown.Toggle variant="outline-secondary" id="credits-filter">
               Credits: {creditsSummary(filters.credits)}
@@ -229,14 +361,46 @@ const CourseBrowser = () => {
           <Button variant="primary" onClick={applyFilters}>
             Apply Filters
           </Button>
+          <Button variant="secondary" onClick={() => setFilters(DEFAULT_FILTERS)} className="ms-2">
+            Clear Filters
+          </Button>
         </div>
 
         <p className="text-muted small">
           Showing {filtered.length} of {icsCourses.length} courses
+          {pageCount > 1 && ` — page ${page} of ${pageCount}`}
         </p>
+
+        {activePathway && (
+          <p className="text-muted small text-center">{activePathway.note}</p>
+        )}
 
         {groups.length === 0 && (
           <p>No courses match your search.</p>
+        )}
+
+        {pageCount > 1 && (
+          <div className="d-flex justify-content-center mb-3">
+            <Pagination className="mb-0">
+              <Pagination.Prev
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              />
+              {Array.from({ length: pageCount }, (_, i) => (
+                <Pagination.Item
+                  key={i}
+                  active={page === i + 1}
+                  onClick={() => setPage(i + 1)}
+                >
+                  {i + 1}
+                </Pagination.Item>
+              ))}
+              <Pagination.Next
+                disabled={page >= pageCount}
+                onClick={() => setPage((p) => p + 1)}
+              />
+            </Pagination>
+          </div>
         )}
 
         {groups.map(([lvl, courses]) => (
@@ -252,16 +416,17 @@ const CourseBrowser = () => {
                 <tr>
                   <th>Course #</th>
                   <th>Title</th>
-                  <th>Credits</th>
+                  <th className="text-center">Credits</th>
                   <th>Faculty</th>
-                  <th>Typical Schedule</th>
-                  <th>Rating</th>
+                  <th style={{ width: '12%' }}>Typical Schedule</th>
+                  <th>Location</th>
+                  <th>Format</th>
                   <th>Prerequisites</th>
                 </tr>
               </thead>
               <tbody>
                 {courses.map((c) => (
-                  <CourseRow key={c.code} course={c} />
+                  <CourseRow key={c.crn ?? c.code} course={c} />
                 ))}
               </tbody>
             </Table>
