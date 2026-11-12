@@ -57,3 +57,18 @@ body {
     align-items: flex-start;
   }
 }
+
+/* ------------ Yep ----------- */
+figcaption{
+  position: absolute;
+  top: 10rem;
+  left: 10%;
+  font-size: 12px;
+  color: white;
+  font-weight: bold;
+}
+
+.bigStuff1{  
+  font-size: 50px;
+  top: 11rem;
+}
