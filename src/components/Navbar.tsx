@@ -12,22 +12,33 @@ const NavBar: React.FC = () => {
   const currentUser = session?.user?.email;
   const role = session?.user?.role;
   return (
-    <Navbar bg="light" expand="lg">
+    <Navbar bg="dark" data-bs-theme="dark" expand="lg">
       <Container>
-        <Navbar.Brand href="/">Next.js Application Template</Navbar.Brand>
+        <Navbar.Brand href="/">EBICSA</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="me-auto justify-content-start">
+          <Nav className="ms-auto align-items-lg-center">
             {currentUser && (
               <>
-                <Nav.Link id="add-stuff-nav" href="/add" active={pathName === '/add'}>
-                  Add Stuff
+                 {/* Navbar Items, link later  */}
+                <Nav.Link id="add-stuff-nav" href="/course_search" active={pathName === '/course_search'}>
+                  Course Search
                 </Nav.Link>
-                <Nav.Link id="list-stuff-nav" href="/list" active={pathName === '/list'}>
-                  List Stuff
+                <Nav.Link id="list-stuff-nav" href="/schedule_builder" active={pathName === '/schedule_builder'}>
+                  Schedule Builder
+                </Nav.Link>
+                <Nav.Link id="list-stuff-nav" href="/my_schedules" active={pathName === '/my_schedules'}>
+                  My Schedules
+                </Nav.Link>
+                <Nav.Link id="list-stuff-nav" href="/degree_pathways" active={pathName === '/degree_pathways'}>
+                  Degree Pathways
+                </Nav.Link>
+                <Nav.Link id="list-stuff-nav" href="/help" active={pathName === '/help'}>
+                  Help
                 </Nav.Link>
               </>
             )}
+            {/* For Admins */}
             {currentUser && role === 'ADMIN' && (
               <Nav.Link id="admin-stuff-nav" href="/admin" active={pathName === '/admin'}>
                 Admin
