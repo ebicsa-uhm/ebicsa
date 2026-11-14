@@ -1,3 +1,5 @@
+@import url('https://googleapis.com');
+
 html,
 body {
   --bs-light-rgb: 236, 236, 236;
@@ -6,12 +8,14 @@ body {
   padding: 0;
   margin: 0;
 }
+
 .wrapper {
   box-sizing: border-box;
   min-height: 100%;
   display: flex;
   flex-direction: column;
 }
+
 .navbar {
   background-color: #024731 !important;
 }
@@ -58,17 +62,79 @@ body {
   }
 }
 
-/* ------------ Yep ----------- */
-figcaption{
+/* ---------- Hero ---------- */
+.heroText {
   position: absolute;
   top: 10rem;
   left: 10%;
-  font-size: 12px;
+  right: 10%;
   color: white;
-  font-weight: bold;
+  z-index: 2;
 }
 
-.bigStuff1{  
-  font-size: 50px;
-  top: 11rem;
+.smallStuff1 {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.bigStuff1 {
+  font-size: clamp(32px, 5vw, 50px); /* shrinks on small screens */
+  font-weight: bold;
+  line-height: 1.2;
+  margin: 0 0 1rem;
+}
+
+.bigStuff2,
+.bigStuff3 {
+  font-family: 'IBM Plex Serif', serif;
+  font-weight: normal;
+}
+
+.smallStuff2 {
+  font-size: 15px;
+  font-family: 'Roboto', sans-serif;
+  margin-bottom: 1.5rem;
+}
+
+.heroButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Solid white button, dark green text */
+.heroBtnFilled {
+  --bs-btn-bg: #ffffff;
+  --bs-btn-border-color: #ffffff;
+  --bs-btn-color: #024731;
+
+  --bs-btn-hover-bg: #e9f2ee;
+  --bs-btn-hover-border-color: #e9f2ee;
+  --bs-btn-hover-color: #024731;
+
+  --bs-btn-active-bg: #d5e6df;
+  --bs-btn-active-border-color: #d5e6df;
+  --bs-btn-active-color: #024731;
+
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Transparent button, white border and text */
+.heroBtnOutline {
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: #ffffff;
+  --bs-btn-color: #ffffff;
+
+  --bs-btn-hover-bg: rgba(255, 255, 255, 0.15);
+  --bs-btn-hover-border-color: #ffffff;
+  --bs-btn-hover-color: #ffffff;
+
+  --bs-btn-active-bg: rgba(255, 255, 255, 0.25);
+  --bs-btn-active-border-color: #ffffff;
+  --bs-btn-active-color: #ffffff;
+
+  font-weight: 600;
+  white-space: nowrap;
 }
