@@ -138,3 +138,34 @@ body {
   font-weight: 600;
   white-space: nowrap;
 }
+
+.bigText1{
+  font-size: 45px;
+  font-weight: bold;
+}
+
+.subText1{
+  font-size: 15px;
+  color: rgb(100, 100, 100);
+}
+
+.icon-box {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background-color: #e3efe8;
+  color: #1f5c3f;
+}
+
+.card a.card-link {
+  color: #1f5c3f;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.card a.card-link:hover {
+  text-decoration: underline;
+}
