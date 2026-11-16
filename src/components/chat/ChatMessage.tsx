@@ -10,7 +10,7 @@ const ChatMessage = ({ role, text }: ChatMessageProps) => {
   const isUser = role === 'user';
 
   return (
-    <div className={`d-flex mb-2 ${isUser ? 'justify-content-end' : 'justify-content-start'}`}> 
+    <div className={`d-flex mb-2 ${isUser ? 'justify-content-end' : 'justify-content-start'}`}>  
       <div
         className={`px-3 py-2 rounded-3 ${isUser ? 'bg-success text-white' : 'bg-white border'}`}
         style={{maxWidth: '80%'}}>
@@ -20,7 +20,7 @@ const ChatMessage = ({ role, text }: ChatMessageProps) => {
   );
 };
 
-
+// ${isUser ? 'justify-content-end' : 'justify-content-start'}`} determines which text message belongs to what side, user's or assistant 
 // within className, {} in JSX means to run JS there.
 // backticks, `Bootstrap class`, make a template string
 

@@ -1,0 +1,1 @@
+// Suggesterd by AI to include as a course viewer within widget; may remove this before M2/M3

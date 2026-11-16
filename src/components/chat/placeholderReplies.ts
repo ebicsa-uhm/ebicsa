@@ -1,0 +1,1 @@
+// fake AI answers until milestone 2 where I'll integrate the API
