@@ -22,3 +22,21 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Compact, borderless pagination - plain numbers instead of boxed buttons. */
+.pagination-compact .page-link {
+  border: none;
+  background: transparent;
+  color: var(--bs-body-color);
+  padding: 0.1rem 0.35rem;
+  font-size: 0.8rem;
+}
+.pagination-compact .page-item.active .page-link {
+  background: transparent;
+  color: var(--bs-primary);
+  font-weight: 600;
+}
+.pagination-compact .page-item.disabled .page-link {
+  color: var(--bs-secondary-color);
+  background: transparent;
+}

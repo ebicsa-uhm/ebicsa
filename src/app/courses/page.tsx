@@ -6,7 +6,6 @@ import {
   Breadcrumb,
   Button,
   Container,
-  Dropdown,
   Form,
   Pagination,
   Table,
@@ -16,38 +15,29 @@ import {
   courseLevel,
   courseNumber,
   courseParticipation,
+  courseStatus,
   DEGREE_PATHWAYS,
   type IcsCourse,
+  type CourseStatus,
   type Participation,
 } from '@/data/icsCourses';
 
-const LEVELS = ['All', '100-Level', '200-Level', '300-Level', '400-Level', 'Graduate'];
 const PARTICIPATION: ('Any' | Participation)[] = ['Any', 'In-Person', 'Hybrid', 'Online'];
-const CREDIT_OPTIONS = [1, 2, 3, 4];
+const STATUS_OPTIONS: ('Any' | CourseStatus)[] = [
+  'Any',
+  'Core',
+  'Undergraduate',
+  'Graduate',
+  'Noncredit',
+];
+const STATUS_BADGE: Record<CourseStatus, string> = {
+  Core: 'success',
+  Undergraduate: 'primary',
+  Graduate: 'info',
+  Noncredit: 'secondary',
+};
 const PAGE_SIZE = 10;
 const UH_BADGE_STYLE = { backgroundColor: '#024731' } as const;
-
-/** Summarizes selected credit values: contiguous runs as ranges ("1-2"),
- *  non-contiguous values individually ("1, 3"). Empty -> "Any". */
-const creditsSummary = (selected: number[]): string => {
-  if (selected.length === 0) return 'Any';
-  const sorted = [...selected].sort((a, b) => a - b);
-  const parts: string[] = [];
-  let start = sorted[0];
-  let prev = sorted[0];
-  for (let i = 1; i <= sorted.length; i++) {
-    if (i < sorted.length && sorted[i] === prev + 1) {
-      prev = sorted[i];
-      continue;
-    }
-    parts.push(start === prev ? `${start}` : `${start}-${prev}`);
-    if (i < sorted.length) {
-      start = sorted[i];
-      prev = sorted[i];
-    }
-  }
-  return parts.join(', ');
-};
 
 interface SchedulePattern {
   label: string;
@@ -112,6 +102,7 @@ const ScheduleList = ({ patterns }: { patterns: SchedulePattern[] }) => {
 
 const CourseRow = memo(function CourseRow({ course }: { course: IcsCourse }) {
   const patterns = parseSchedule(course.schedule);
+  const status = courseStatus(course.code);
   const locations = [
     ...new Set(patterns.map((p) => p.location).filter((l): l is string => !!l)),
   ];
@@ -129,43 +120,37 @@ const CourseRow = memo(function CourseRow({ course }: { course: IcsCourse }) {
       </td>
       <td>
         {course.title}
-        {course.description && (
-          <div className="text-muted small course-description mt-1">
-            {course.description}
-          </div>
-        )}
         {course.notes && (
           <div className="text-muted small mt-1 fst-italic">{course.notes}</div>
         )}
       </td>
       <td className="text-center text-nowrap">{course.credits}</td>
       <td>{course.faculty ?? '—'}</td>
+      <td className="small">{locations.length ? locations.join(', ') : '—'}</td>
+      <td className="small">{course.prerequisites ?? 'None'}</td>
       <td className="small">
         <ScheduleList patterns={patterns} />
       </td>
-      <td className="small">{locations.length ? locations.join(', ') : '—'}</td>
       <td className="text-nowrap">{courseParticipation(course)}</td>
-      <td className="small">{course.prerequisites ?? 'None'}</td>
+      <td>
+        <Badge bg={STATUS_BADGE[status]}>{status}</Badge>
+      </td>
     </tr>
   );
 });
 
 interface Filters {
   query: string;
-  level: string;
   participation: 'Any' | Participation;
-  credits: number[];
-  professor: string;
   pathway: string;
+  status: 'Any' | CourseStatus;
 }
 
 const DEFAULT_FILTERS: Filters = {
   query: '',
-  level: 'All',
   participation: 'Any',
-  credits: [],
-  professor: 'Any',
   pathway: 'Any',
+  status: 'Any',
 };
 
 /** The ICS course browser page, styled after the Harvard DCE course catalog. */
@@ -178,28 +163,10 @@ const CourseBrowser = () => {
   const setFilter = <K extends keyof Filters>(key: K, value: Filters[K]) =>
     setFilters((prev) => ({ ...prev, [key]: value }));
 
-  const toggleCredit = (n: number) =>
-    setFilter(
-      'credits',
-      filters.credits.includes(n)
-        ? filters.credits.filter((c) => c !== n)
-        : [...filters.credits, n]
-    );
-
-  const allCreditsChecked = filters.credits.length === CREDIT_OPTIONS.length;
-
   const applyFilters = () => {
     setApplied({ ...filters });
     setPage(1);
   };
-
-  const professors = useMemo(() => {
-    const names = new Set<string>();
-    for (const c of icsCourses) {
-      c.faculty?.split('/').forEach((n) => names.add(n.trim()));
-    }
-    return ['Any', ...[...names].sort()];
-  }, []);
 
   const activePathway = useMemo(
     () => DEGREE_PATHWAYS.find((p) => p.key === applied.pathway),
@@ -213,14 +180,10 @@ const CourseBrowser = () => {
       : null;
     return icsCourses.filter((c) => {
       if (pathwayNums && !pathwayNums.has(courseNumber(c.code))) return false;
-      if (applied.level !== 'All' && courseLevel(c.code) !== applied.level) return false;
       if (applied.participation !== 'Any' && courseParticipation(c) !== applied.participation)
         return false;
-      if (applied.credits.length > 0) {
-        const cred = parseInt(c.credits, 10);
-        if (Number.isNaN(cred) || !applied.credits.includes(cred)) return false;
-      }
-      if (applied.professor !== 'Any' && !c.faculty?.includes(applied.professor)) return false;
+      if (applied.status !== 'Any' && courseStatus(c.code) !== applied.status)
+        return false;
       if (!q) return true;
       return [c.code, c.title, c.faculty, c.notes, c.prerequisites, c.schedule]
         .filter(Boolean)
@@ -263,107 +226,72 @@ const CourseBrowser = () => {
             placeholder="Search courses, faculty, notes..."
             value={filters.query}
             onChange={(e) => setFilter('query', e.target.value)}
-            className="mb-3"
+            className="mb-3 rounded-pill"
             style={{ maxWidth: '480px' }}
             aria-label="Search courses"
           />
         </div>
 
-        <div className="d-flex justify-content-center gap-2 mb-2 flex-wrap">
-          <Form.Select
-            value={filters.level}
-            onChange={(e) => setFilter('level', e.target.value)}
-            style={{ width: 'auto' }}
-            aria-label="Filter by course level"
-          >
-            {LEVELS.map((l) => (
-              <option key={l} value={l}>
-                {l === 'All' ? 'All Levels' : l}
-              </option>
-            ))}
-          </Form.Select>
-
-          <Form.Select
-            value={filters.participation}
-            onChange={(e) =>
-              setFilter('participation', e.target.value as 'Any' | Participation)
-            }
-            style={{ width: 'auto' }}
-            aria-label="Filter by participation"
-          >
-            {PARTICIPATION.map((p) => (
-              <option key={p} value={p}>
-                {p === 'Any' ? 'Any Participation' : p}
-              </option>
-            ))}
-          </Form.Select>
-
-          <Form.Select
-            value={filters.professor}
-            onChange={(e) => setFilter('professor', e.target.value)}
-            style={{ width: 'auto' }}
-            aria-label="Filter by professor"
-          >
-            {professors.map((p) => (
-              <option key={p} value={p}>
-                {p === 'Any' ? 'Any Professor' : p}
-              </option>
-            ))}
-          </Form.Select>
-
-          <Form.Select
-            value={filters.pathway}
-            onChange={(e) => setFilter('pathway', e.target.value)}
-            style={{ width: 'auto' }}
-            aria-label="Filter by degree pathway"
-          >
-            <option value="Any">Any Pathway</option>
-            {DEGREE_PATHWAYS.map((p) => (
-              <option key={p.key} value={p.key}>
-                {p.label}
-              </option>
-            ))}
-          </Form.Select>
-
-          <Dropdown autoClose={false}>
-            <Dropdown.Toggle variant="outline-secondary" id="credits-filter">
-              Credits: {creditsSummary(filters.credits)}
-            </Dropdown.Toggle>
-            <Dropdown.Menu>
-              <Dropdown.Item
-                onClick={() =>
-                  setFilter('credits', allCreditsChecked ? [] : [...CREDIT_OPTIONS])
-                }
-              >
-                <Form.Check
-                  type="checkbox"
-                  label="All"
-                  checked={allCreditsChecked}
-                  readOnly
-                />
-              </Dropdown.Item>
-              <Dropdown.Divider />
-              {CREDIT_OPTIONS.map((n) => (
-                <Dropdown.Item key={n} onClick={() => toggleCredit(n)}>
-                  <Form.Check
-                    type="checkbox"
-                    label={`${n} credit${n > 1 ? 's' : ''}`}
-                    checked={filters.credits.includes(n)}
-                    readOnly
-                  />
-                </Dropdown.Item>
+        <div className="row g-2 justify-content-center mb-3">
+          <div className="col-12 col-sm-6 col-lg-3">
+            <Form.Select
+              value={filters.participation}
+              onChange={(e) =>
+                setFilter('participation', e.target.value as 'Any' | Participation)
+              }
+              className="rounded-pill w-100"
+              aria-label="Filter by participation"
+            >
+              {PARTICIPATION.map((p) => (
+                <option key={p} value={p}>
+                  {p === 'Any' ? 'Any Participation' : p}
+                </option>
               ))}
-            </Dropdown.Menu>
-          </Dropdown>
-        </div>
+            </Form.Select>
+          </div>
 
-        <div className="d-flex justify-content-center mb-3">
-          <Button variant="primary" onClick={applyFilters}>
-            Apply Filters
-          </Button>
-          <Button variant="secondary" onClick={() => setFilters(DEFAULT_FILTERS)} className="ms-2">
-            Clear Filters
-          </Button>
+          <div className="col-12 col-sm-6 col-lg-3">
+            <Form.Select
+              value={filters.pathway}
+              onChange={(e) => setFilter('pathway', e.target.value)}
+              className="rounded-pill w-100"
+              aria-label="Filter by degree pathway"
+            >
+              <option value="Any">Any Pathway</option>
+              {DEGREE_PATHWAYS.map((p) => (
+                <option key={p.key} value={p.key}>
+                  {p.label}
+                </option>
+              ))}
+            </Form.Select>
+          </div>
+
+          <div className="col-12 col-sm-6 col-lg-3">
+            <Form.Select
+              value={filters.status}
+              onChange={(e) =>
+                setFilter('status', e.target.value as 'Any' | CourseStatus)
+              }
+              className="rounded-pill w-100"
+              aria-label="Filter by course status"
+            >
+              {STATUS_OPTIONS.map((st) => (
+                <option key={st} value={st}>
+                  {st === 'Any' ? 'Any Status' : st}
+                </option>
+              ))}
+            </Form.Select>
+          </div>
+
+          <div className="col-12 col-sm-6 col-lg-3 d-flex gap-2">
+            <Button
+              variant="primary"
+              onClick={applyFilters}
+              className="rounded-pill flex-fill"
+            >
+              Apply Filters
+            </Button>
+          </div>
         </div>
 
         <p className="text-muted small">
@@ -380,8 +308,8 @@ const CourseBrowser = () => {
         )}
 
         {pageCount > 1 && (
-          <div className="d-flex justify-content-center mb-3">
-            <Pagination className="mb-0">
+          <div className="d-flex justify-content-end mb-3">
+            <Pagination size="sm" className="pagination-compact mb-0">
               <Pagination.Prev
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
@@ -418,10 +346,11 @@ const CourseBrowser = () => {
                   <th>Title</th>
                   <th className="text-center">Credits</th>
                   <th>Faculty</th>
-                  <th style={{ width: '12%' }}>Typical Schedule</th>
                   <th>Location</th>
-                  <th>Format</th>
                   <th>Prerequisites</th>
+                  <th style={{ width: '12%' }}>Meets</th>
+                  <th>Participation</th>
+                  <th>Status</th>
                 </tr>
               </thead>
               <tbody>

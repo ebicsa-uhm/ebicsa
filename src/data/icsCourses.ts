@@ -2,7 +2,9 @@
  * ICS course data for Spring 2027 (Jan 11 - May 14, 2027), transcribed from
  * UH Mānoa Star GPS schedule listings. Each CRN section is a separate entry,
  * so the same course code can appear multiple times with different times.
- * Seat counts and waitlist availability are intentionally omitted.
+ * Seat availability is captured per section via optional seatsOpen /
+ * waitlistOpen counts (used to derive Open / Waitlist / Full status);
+ * sections without seat data default to Open.
  */
 
 export type Participation = 'In-Person' | 'Hybrid' | 'Online';
@@ -22,6 +24,8 @@ export type IcsCourse = {
   description?: string;
   rating?: string;
   notes?: string;
+  seatsOpen?: number;
+  waitlistOpen?: number;
 };
 
 const GRADE_CN = 'Letter Plus/Minus, Credit/No Credit';
@@ -857,6 +861,8 @@ export const icsCourses: IcsCourse[] = [
     description:
       'Seminar discussing special topics in information and computer science. Topics and number of credits vary. Repeatable unlimited times.',
     notes: 'Waitlist only',
+    seatsOpen: 0,
+    waitlistOpen: 1,
   },
 ];
 
@@ -867,6 +873,15 @@ export const icsCourses: IcsCourse[] = [
  */
 export const courseParticipation = (course: IcsCourse): Participation =>
   course.participation ?? 'In-Person';
+
+export type SectionStatus = 'Open' | 'Waitlist' | 'Full';
+
+/** Section availability status. seatsOpen > 0 or unknown -> 'Open';
+ *  seatsOpen == 0 -> 'Waitlist' when the waitlist has space, else 'Full'. */
+export const sectionStatus = (course: IcsCourse): SectionStatus => {
+  if (course.seatsOpen === undefined || course.seatsOpen > 0) return 'Open';
+  return (course.waitlistOpen ?? 0) > 0 ? 'Waitlist' : 'Full';
+};
 
 /** Returns the catalog level group for a course code like "ICS 311". */
 export const courseLevel = (code: string): string => {
@@ -882,6 +897,36 @@ export const courseLevel = (code: string): string => {
 export const courseNumber = (code: string): number => {
   const n = parseInt(code.split(' ')[1] ?? '', 10);
   return Number.isNaN(n) ? -1 : n;
+};
+
+export type CourseStatus = 'Core' | 'Undergraduate' | 'Graduate' | 'Noncredit';
+
+/** BA ICS General Track core courses (ics.hawaii.edu BA flowchart).
+ *  Pair-choice requirements (312/331, 313/361, 351/451, 222+355) are
+ *  options rather than fixed core and are intentionally excluded. */
+const CORE_CODES = new Set<string>([
+  'ICS 111',
+  'ICS 141',
+  'ICS 211',
+  'ICS 212',
+  'ICS 241',
+  'ICS 311',
+  'ICS 314',
+  'ICS 321',
+  'ICS 332',
+]);
+
+/** Course codes that do not count toward degree credit. Empty until the
+ *  noncredit course list is confirmed. */
+const NONCREDIT_CODES = new Set<string>([]);
+
+/** Academic status of a course: BA core courses -> 'Core'; explicit
+ *  noncredit codes -> 'Noncredit'; 500-level and above -> 'Graduate';
+ *  everything else -> 'Undergraduate'. */
+export const courseStatus = (code: string): CourseStatus => {
+  if (CORE_CODES.has(code)) return 'Core';
+  if (NONCREDIT_CODES.has(code)) return 'Noncredit';
+  return courseNumber(code) >= 500 ? 'Graduate' : 'Undergraduate';
 };
 
 export interface DegreePathway {
