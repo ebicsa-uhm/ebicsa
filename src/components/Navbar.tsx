@@ -18,7 +18,14 @@ const NavBar: React.FC = () => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto justify-content-start">
-            {currentUser && (
+          <Nav.Link
+            id="my-schedules-nav"
+            href="/my-schedules"
+            active={pathName === '/my-schedules'}
+          >
+            My Schedules
+          </Nav.Link>
+          {currentUser && (
               <>
                 <Nav.Link id="add-stuff-nav" href="/add" active={pathName === '/add'}>
                   Add Stuff
