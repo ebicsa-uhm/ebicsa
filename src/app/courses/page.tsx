@@ -16,19 +16,21 @@ import {
   courseNumber,
   courseParticipation,
   courseStatus,
+  sectionStatus,
   DEGREE_PATHWAYS,
   type IcsCourse,
   type CourseStatus,
   type Participation,
+  type SectionStatus,
 } from '@/data/icsCourses';
 
 const PARTICIPATION: ('Any' | Participation)[] = ['Any', 'In-Person', 'Hybrid', 'Online'];
-const STATUS_OPTIONS: ('Any' | CourseStatus)[] = [
+const STATUS_OPTIONS: ('Any' | SectionStatus)[] = [
   'Any',
-  'Core',
-  'Undergraduate',
-  'Graduate',
-  'Noncredit',
+  'Open',
+  'Waitlist',
+  'Closed',
+  'Full',
 ];
 const STATUS_BADGE: Record<CourseStatus, string> = {
   Core: 'success',
@@ -124,7 +126,9 @@ const CourseRow = memo(function CourseRow({ course }: { course: IcsCourse }) {
           <div className="text-muted small mt-1 fst-italic">{course.notes}</div>
         )}
       </td>
-      <td className="text-center text-nowrap">{course.credits}</td>
+      <td className="text-center">
+        <Badge bg={STATUS_BADGE[status]}>{status}</Badge>
+      </td>
       <td>{course.faculty ?? '—'}</td>
       <td className="small">{locations.length ? locations.join(', ') : '—'}</td>
       <td className="small">{course.prerequisites ?? 'None'}</td>
@@ -132,9 +136,6 @@ const CourseRow = memo(function CourseRow({ course }: { course: IcsCourse }) {
         <ScheduleList patterns={patterns} />
       </td>
       <td className="text-nowrap">{courseParticipation(course)}</td>
-      <td>
-        <Badge bg={STATUS_BADGE[status]}>{status}</Badge>
-      </td>
     </tr>
   );
 });
@@ -143,7 +144,7 @@ interface Filters {
   query: string;
   participation: 'Any' | Participation;
   pathway: string;
-  status: 'Any' | CourseStatus;
+  status: 'Any' | SectionStatus;
 }
 
 const DEFAULT_FILTERS: Filters = {
@@ -179,10 +180,15 @@ const CourseBrowser = () => {
       ? new Set(activePathway.courses.map(courseNumber))
       : null;
     return icsCourses.filter((c) => {
-      if (pathwayNums && !pathwayNums.has(courseNumber(c.code))) return false;
+      if (
+        pathwayNums &&
+        !pathwayNums.has(courseNumber(c.code)) &&
+        courseLevel(c.code) !== '400-Level'
+      )
+        return false;
       if (applied.participation !== 'Any' && courseParticipation(c) !== applied.participation)
         return false;
-      if (applied.status !== 'Any' && courseStatus(c.code) !== applied.status)
+      if (applied.status !== 'Any' && sectionStatus(c) !== applied.status)
         return false;
       if (!q) return true;
       return [c.code, c.title, c.faculty, c.notes, c.prerequisites, c.schedule]
@@ -196,15 +202,6 @@ const CourseBrowser = () => {
     () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
     [filtered, page]
   );
-
-  const groups = useMemo(() => {
-    const map = new Map<string, IcsCourse[]>();
-    for (const c of paged) {
-      const lvl = courseLevel(c.code);
-      map.set(lvl, [...(map.get(lvl) ?? []), c]);
-    }
-    return [...map.entries()];
-  }, [paged]);
 
   return (
     <main>
@@ -227,7 +224,6 @@ const CourseBrowser = () => {
             value={filters.query}
             onChange={(e) => setFilter('query', e.target.value)}
             className="mb-3 rounded-pill"
-            style={{ maxWidth: '480px' }}
             aria-label="Search courses"
           />
         </div>
@@ -270,7 +266,7 @@ const CourseBrowser = () => {
             <Form.Select
               value={filters.status}
               onChange={(e) =>
-                setFilter('status', e.target.value as 'Any' | CourseStatus)
+                setFilter('status', e.target.value as 'Any' | SectionStatus)
               }
               className="rounded-pill w-100"
               aria-label="Filter by course status"
@@ -303,7 +299,7 @@ const CourseBrowser = () => {
           <p className="text-muted small text-center">{activePathway.note}</p>
         )}
 
-        {groups.length === 0 && (
+        {paged.length === 0 && (
           <p>No courses match your search.</p>
         )}
 
@@ -331,36 +327,25 @@ const CourseBrowser = () => {
           </div>
         )}
 
-        {groups.map(([lvl, courses]) => (
-          <div key={lvl} className="mb-4">
-            <h2 className="h4 border-bottom pb-2">
-              {lvl}{' '}
-              <Badge bg="secondary" className="fs-6 fw-normal">
-                {courses.length}
-              </Badge>
-            </h2>
-            <Table striped hover responsive className="align-middle">
-              <thead>
-                <tr>
-                  <th>Course #</th>
-                  <th>Title</th>
-                  <th className="text-center">Credits</th>
-                  <th>Faculty</th>
-                  <th>Location</th>
-                  <th>Prerequisites</th>
-                  <th style={{ width: '12%' }}>Meets</th>
-                  <th>Participation</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {courses.map((c) => (
-                  <CourseRow key={c.crn ?? c.code} course={c} />
-                ))}
-              </tbody>
-            </Table>
-          </div>
-        ))}
+        <Table striped hover responsive className="align-middle">
+          <thead>
+            <tr>
+              <th>Course #</th>
+              <th>Title</th>
+              <th className="text-center">Status</th>
+              <th>Faculty</th>
+              <th>Location</th>
+              <th>Prerequisites</th>
+              <th style={{ width: '12%' }}>Meets</th>
+              <th>Participation</th>
+            </tr>
+          </thead>
+          <tbody>
+            {paged.map((c) => (
+              <CourseRow key={c.crn ?? c.code} course={c} />
+            ))}
+          </tbody>
+        </Table>
       </Container>
     </main>
   );

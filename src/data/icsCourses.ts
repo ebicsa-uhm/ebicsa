@@ -874,10 +874,12 @@ export const icsCourses: IcsCourse[] = [
 export const courseParticipation = (course: IcsCourse): Participation =>
   course.participation ?? 'In-Person';
 
-export type SectionStatus = 'Open' | 'Waitlist' | 'Full';
+export type SectionStatus = 'Open' | 'Waitlist' | 'Closed' | 'Full';
 
 /** Section availability status. seatsOpen > 0 or unknown -> 'Open';
- *  seatsOpen == 0 -> 'Waitlist' when the waitlist has space, else 'Full'. */
+ *  seatsOpen == 0 -> 'Waitlist' when the waitlist has space, else 'Full'.
+ *  'Closed' is reserved for sections closed to enrollment (no seat data
+ *  produces it yet). */
 export const sectionStatus = (course: IcsCourse): SectionStatus => {
   if (course.seatsOpen === undefined || course.seatsOpen > 0) return 'Open';
   return (course.waitlistOpen ?? 0) > 0 ? 'Waitlist' : 'Full';
@@ -955,6 +957,83 @@ const SHARED_PATHWAY_COURSES = [
  * BAM students additionally take ICS 690 (1 cr) beyond BS requirements.
  */
 export const DEGREE_PATHWAYS: DegreePathway[] = [
+  {
+    key: 'ba-ics',
+    label: 'B.A. ICS - General Track',
+    courses: [
+      'ICS 111',
+      'ICS 141',
+      'ICS 211',
+      'ICS 212',
+      'ICS 241',
+      'ICS 311',
+      'ICS 312',
+      'ICS 313',
+      'ICS 314',
+      'ICS 321',
+      'ICS 331',
+      'ICS 332',
+      'ICS 351',
+      'ICS 361',
+      'ICS 222',
+      'ICS 355',
+      'ICS 451',
+    ],
+    note: 'BA ICS General Track: core ICS 111/141/211/212/241/311/314/321/332, plus one course in two of (312/331, 313/361, 351/451, 222+355). Also requires one 400-level+ ICS course and four 300-level+ concentration courses.',
+  },
+  {
+    key: 'ba-ics-sec',
+    label: 'B.A. ICS - Security Science',
+    courses: [
+      'ICS 111',
+      'ICS 141',
+      'ICS 211',
+      'ICS 212',
+      'ICS 215',
+      'ICS 241',
+      'ICS 311',
+      'ICS 314',
+      'ICS 321',
+      'ICS 332',
+      'ICS 222',
+      'ICS 351',
+      'ICS 451',
+      'ICS 355',
+      'ICS 423',
+      'ICS 425',
+      'ICS 426',
+      'ICS 428',
+      'ICS 455',
+      'ICS 495',
+    ],
+    note: 'BA ICS Security Science: core ICS 111/141/211/212(or 215)/241/311/314/321/332, plus ICS 222, ICS 355, and ICS 351(or 451). Four electives from ICS 423/425/426/428/455/495 (ECE 406 also allowed).',
+  },
+  {
+    key: 'ba-ics-ccm',
+    label: 'B.A. ICS - Creative Computational Media',
+    courses: [
+      'ICS 111',
+      'ICS 211',
+      'ICS 212',
+      'ICS 235',
+      'ICS 311',
+      'ICS 314',
+      'ICS 321',
+      'ICS 355',
+      'ICS 369',
+      'ICS 481',
+      'ICS 487',
+      'ICS 464',
+      'ICS 482',
+      'ICS 484',
+      'ICS 485',
+      'ICS 486',
+      'ICS 488',
+      'ICS 489',
+      'ICS 496',
+    ],
+    note: 'BA ICS Creative Computational Media: ICS core 111/211/212/235(Fall only)/311/314/321/355/369/481/487 plus ICS 110D animations (excluded - shares number with ICS 110P) and MATH 301/307/372; electives from 464/482/484/485/486/488/489/496.',
+  },
   {
     key: 'bs-ms-cs',
     label: 'B.S. & M.S. in Computer Science',
