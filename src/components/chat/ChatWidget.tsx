@@ -1,11 +1,11 @@
 // This component will be the *widget* itself, we will implement the real circular launcher, mini popup, then expanded view
 'use client';
 
-import { Button, Card, Offcanvas, OffcanvasBody, OffcanvasHeader } from "react-bootstrap";
+import { Button, Card, Offcanvas } from "react-bootstrap";
 import ChatMessage from "./ChatMessage";
 import type { Message } from "./types"; //import type means this is only used for type checking; not importing something like a component or function
 import { useState } from "react"; // useState gives the component a "memory" that survives re-renders; changing it redraws the component
-import { ArrowsAngleContract, ArrowsAngleExpand, ChatDotsFill, Dash, DashLg, XLg } from "react-bootstrap-icons"; 
+import { ArrowsAngleContract, ArrowsAngleExpand, ChatDotsFill, DashLg, XLg } from "react-bootstrap-icons"; 
 
 type ChatView = 'closed' | 'mini' | 'expanded'; // the only 3 views the widget can be in
 
