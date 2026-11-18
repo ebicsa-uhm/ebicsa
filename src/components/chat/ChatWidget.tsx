@@ -6,6 +6,7 @@ import ChatMessage from "./ChatMessage";
 import type { Message } from "./types"; //import type means this is only used for type checking; not importing something like a component or function
 import { useState } from "react"; // useState gives the component a "memory" that survives re-renders; changing it redraws the component
 import { ArrowRight, ArrowsAngleContract, ArrowsAngleExpand, ChatDotsFill, DashLg, XLg } from "react-bootstrap-icons"; 
+import { getAssistantReply } from "./placeholderReplies";
 
 type ChatView = 'closed' | 'mini' | 'expanded'; // the only 3 views the widget can be in
 
@@ -27,23 +28,38 @@ const ChatWidget = () => {
   // Making changes that allow added messages to live in state
   const [messages, setMessages] = useState<Message[]>(sampleMessages); // the conversation which starts w/ current sample messsages
   const [draft, setDraft] = useState(''); // whatever is typed into our input box
+  const [isTyping, setIsTyping] = useState(false); // true iff waiting for assistant to reply back (modify later when implementing real AI)
 
-
-  //Adds a user msg to the chat. 
-  const sendMessage = (text: string) => {
+  //adds a user msg to the chat, then async allows us to put await inside which waits for the reply, then adds it to the arr
+  const sendMessage = async (text: string) => {
     const trimmed = text.trim(); //removes spaces at the start/end, so "  " counts as empty
-    if (trimmed === '') return; //ignore empty messages
+    if (trimmed === '' || isTyping) return; //ignore empty messages and don't send inputs when assistant is formulating reply
 
     const newMessage: Message = {id: Date.now(), role: 'user', text: trimmed };
-    setMessages([...messages, newMessage]) // a NEW arr: all old messages + the new one at the end
+    const history = [...messages, newMessage]; //full conversation to send to AI
+
+    setMessages((prev) => [...prev, newMessage]); //show user's message asap
+    setIsTyping(true); //show the "typing..." message
+
+    // try runs the code
+    try { 
+      const replyText = await getAssistantReply(history) //waits here for 8 ms until reply arrivves
+      const reply: Message = {id: Date.now(), role: 'assistant', text: replyText };
+      setMessages((prev) => [...prev, reply]); //show assisstant's reply asap
+    } catch { //runs only if something in *try*, in this case getAssistantReply, throws an error... like no wifi or AI API is down
+      const errReply: Message = {id: Date.now(), role: 'assistant', text: "Sorry, we ran into an issue. Please wait and try again later." };
+      setMessages((prev) => [...prev, errReply]);
+    } finally { //always runs 
+      setIsTyping(false); //this is so that "typing..." never gets stuck 
+    }
   };
 
-  // For above; why not messages.push(newMessage)? this is bc push modifies the existing array 
+  // for above; why not messages.push(newMessage)? this is bc push modifies the existing array 
   // React decides whether to re-render by checking "is this a different array than before?" 
-  // With push it's still the same array, so React thinks nothing changed and doesn't remake it
+  // with push it's still the same array, so React thinks nothing changed and doesn't remake it
 
 
-    // Runs when the form is submitted (Enter key or clicking the send button)
+    // runs when the form is submitted (Enter key or clicking the send button)
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault(); // stop the browser from reloading the page (default form behavior)
     sendMessage(draft);
@@ -57,8 +73,15 @@ const ChatWidget = () => {
     <ChatMessage key={message.id} role={message.role} text={message.text}/>
   ));
 
+  //adding up existing messages & "typing..." bubble while waiting for reply, fragment is here to group 2 things into one val
+  const conversation = (
+    <>
+      {messageList}{isTyping && <ChatMessage role="assistant" text="EBICSA is typing..."></ChatMessage>}
+    </>
+  )
 
-  // This is the input box & send button, stored in a var so both the mini popup and expanded view can use it
+
+  // this is the input box & send button, stored in a var so both the mini popup and expanded view can use it
   const inputBox = (
     <Form onSubmit ={handleSubmit}>
       <InputGroup> {/* puts the text box and button together into one rounded bar lie the mockup */}
@@ -68,7 +91,7 @@ const ChatWidget = () => {
           value={draft} 
           onChange={(event) => setDraft(event.target.value)} // onChange={. . .} means that on every keystroke, draft is updated to what's in the box. event.target is the input element, and .value is its current text
         />
-        <Button type="submit" variant="success" aria-label="Send message" disabled={draft.trim() === ''}> {/* the disabled={} greys out button when box is empty */}
+        <Button type="submit" variant="success" aria-label="Send message" disabled={draft.trim() === '' || isTyping}> {/* the disabled={} greys out button when box is empty AND when assistant is typing a response*/}
           <ArrowRight/>
         </Button>
       </InputGroup>
@@ -109,7 +132,7 @@ const ChatWidget = () => {
           </Card.Header>
           {/* maxHeight caps the message area; overflowY: 'auto' adds a scrollbar instead of the card growing off screen lol */}
           <Card.Body style={{ maxHeight: '20rem', overflowY: 'auto' }}>
-            {messageList}
+            {conversation}
           </Card.Body>
           <Card.Footer className="bg-white">{inputBox}</Card.Footer>
         </Card>
@@ -133,7 +156,7 @@ const ChatWidget = () => {
         </Offcanvas.Header>
         {/* d-flex flex-column stacks messages and input vertically */}
         <Offcanvas.Body className="d-flex flex-column">
-          <div className="flex-grow-1 overflow-auto">{messageList}</div>
+          <div className="flex-grow-1 overflow-auto">{conversation}</div>
           <div className="pt-3 border-top">{inputBox}</div>
         </Offcanvas.Body>
       </Offcanvas>
