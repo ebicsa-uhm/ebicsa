@@ -13,6 +13,9 @@ const sampleMessages: Message[] = [
   { id: 1, role: 'user', text: 'Do I need ICS 241 before ICS 311?'},
   { id: 2, role: 'assistant', text:"Yes. ICS 311 (Algorithms) lists ICS 241 as a prerequisite. You've finished ICS 141, so you can take ICS 241 next term."},
   { id: 3, role: 'user', text: 'Thanks!' },
+  { id: 4, role: 'assistant', text:"Gg ferkin ez"},
+  { id: 5, role: 'user', text:"hey"},
+  { id: 6, role: 'assistant', text:"u da copycat"}
 ]; //hmmm this is just an array version that simplifies the process of mapping messages
 
 
@@ -113,7 +116,7 @@ const ChatWidget = () => {
       )}
 
       {/*--- Expanded Panel HERE ---*/}
-      <Offcanvas show={view === 'expanded'} onHide={() => setView('closed')} placement="end">
+      <Offcanvas show={view === 'expanded'} onHide={() => setView('closed')} placement="end" className="w-100">
         <Offcanvas.Header className="bg-success text-white d-flex justify-content-between align-items-center">
           <div>
             <Offcanvas.Title className="fw-bold">Ask EBICSA</Offcanvas.Title>
@@ -130,7 +133,7 @@ const ChatWidget = () => {
         </Offcanvas.Header>
         {/* d-flex flex-column stacks messages and input vertically */}
         <Offcanvas.Body className="d-flex flex-column">
-          <div className="flex-grow-1" overflow-auto>{messageList}</div>
+          <div className="flex-grow-1 overflow-auto">{messageList}</div>
           <div className="pt-3 border-top">{inputBox}</div>
         </Offcanvas.Body>
       </Offcanvas>
