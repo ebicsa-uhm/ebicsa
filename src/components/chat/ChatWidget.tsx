@@ -4,11 +4,12 @@
 import { Button, Card, Form, InputGroup, Offcanvas } from "react-bootstrap";
 import ChatMessage from "./ChatMessage";
 import type { Message } from "./types"; //import type means this is only used for type checking; not importing something like a component or function
-import { useState } from "react"; // useState gives the component a "memory" that survives re-renders; changing it redraws the component
+import { useEffect, useRef, useState } from "react"; // useRef = handle to a real page element, useEffect = run code after the page updates
 import { ArrowRight, ArrowsAngleContract, ArrowsAngleExpand, ChatDotsFill, DashLg, XLg } from "react-bootstrap-icons"; 
 import { getAssistantReply } from "./placeholderReplies";
 
 type ChatView = 'closed' | 'mini' | 'expanded'; // the only 3 views the widget can be in
+
 
 const sampleMessages: Message[] = [
   { id: 1, role: 'user', text: 'Do I need ICS 241 before ICS 311?'},
@@ -23,6 +24,9 @@ const sampleMessages: Message[] = [
 // outside the component so that the impure error doesn't pop up
 const makeId = () => Date.now();
 
+
+
+
 // block body => { } instead of => ( ) because we need to run code (useState, messageList) before returning
 const ChatWidget = () => {
   // view = the current value, setView = the function that changes it. starts as 'closed'
@@ -32,6 +36,15 @@ const ChatWidget = () => {
   const [messages, setMessages] = useState<Message[]>(sampleMessages); // the conversation which starts w/ current sample messsages
   const [draft, setDraft] = useState(''); // whatever is typed into our input box
   const [isTyping, setIsTyping] = useState(false); // true iff waiting for assistant to reply back (modify later when implementing real AI)
+
+  // points at an invisible div at the very bottom of the conversation, so we can scroll to it
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  // after React draws a new message / typing bubble / chips, or switches views, scroll to the bottom marker
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [messages, isTyping, view]);
+
 
   //adds a user msg to the chat, then async allows us to put await inside which waits for the reply, then adds it to the arr
   const sendMessage = async (text: string) => {
@@ -93,6 +106,7 @@ const ChatWidget = () => {
       {messageList}
       {isTyping && <ChatMessage role="assistant" text="EBICSA is typing..."></ChatMessage>}
       {suggestionChips}
+      <div ref={bottomRef}/>  {/* invisible marker at the bottom; we scroll this into view */}
     </>
   );
 
