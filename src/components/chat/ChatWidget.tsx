@@ -19,6 +19,9 @@ const sampleMessages: Message[] = [
   { id: 6, role: 'assistant', text:"u da copycat"}
 ]; //hmmm this is just an array version that simplifies the process of mapping messages
 
+// makes a unique id for a new message (the current time in ms).
+// outside the component so that the impure error doesn't pop up
+const makeId = () => Date.now();
 
 // block body => { } instead of => ( ) because we need to run code (useState, messageList) before returning
 const ChatWidget = () => {
@@ -35,7 +38,7 @@ const ChatWidget = () => {
     const trimmed = text.trim(); //removes spaces at the start/end, so "  " counts as empty
     if (trimmed === '' || isTyping) return; //ignore empty messages and don't send inputs when assistant is formulating reply
 
-    const newMessage: Message = {id: Date.now(), role: 'user', text: trimmed };
+    const newMessage: Message = {id: makeId(), role: 'user', text: trimmed };
     const history = [...messages, newMessage]; //full conversation to send to AI
 
     setMessages((prev) => [...prev, newMessage]); //show user's message asap
@@ -43,11 +46,11 @@ const ChatWidget = () => {
 
     // try runs the code
     try { 
-      const replyText = await getAssistantReply(history) //waits here for 8 ms until reply arrivves
-      const reply: Message = {id: Date.now(), role: 'assistant', text: replyText };
+      const replyData = await getAssistantReply(history) //{ text, courses?, suggestions? }
+      const reply: Message = {id: makeId(), role: 'assistant', ...replyData };  // ...replyData copies text/courses/suggestions in
       setMessages((prev) => [...prev, reply]); //show assisstant's reply asap
     } catch { //runs only if something in *try*, in this case getAssistantReply, throws an error... like no wifi or AI API is down
-      const errReply: Message = {id: Date.now(), role: 'assistant', text: "Sorry, we ran into an issue. Please wait and try again later." };
+      const errReply: Message = {id: makeId(), role: 'assistant', text: "Sorry, we ran into an issue. Please wait and try again later." };
       setMessages((prev) => [...prev, errReply]);
     } finally { //always runs 
       setIsTyping(false); //this is so that "typing..." never gets stuck 
@@ -70,15 +73,28 @@ const ChatWidget = () => {
 
   // JSX can be stored in a variable; built once here so both the mini popup and expanded panel can show {messageList}
   const messageList = messages.map((message) => (
-    <ChatMessage key={message.id} role={message.role} text={message.text}/>
+    <ChatMessage key={message.id} role={message.role} text={message.text} courses={message.courses}/>
   ));
 
-  //adding up existing messages & "typing..." bubble while waiting for reply, fragment is here to group 2 things into one val
+  const lastMessage = messages[messages.length - 1];
+  const suggestionChips = !isTyping && lastMessage.suggestions && (
+    <div className="d-flex flex-wrap gap-2 mt-1 mb-2">
+      {lastMessage.suggestions.map((suggestion) => (
+        <Button key={suggestion} variant="outline-success" size="sm" className="rounded-pill" onClick={() => sendMessage(suggestion)}>
+          {suggestion}
+        </Button>
+      ))}
+    </div>
+  );
+
+  //adding up existing messages & "typing..." bubble while waiting for reply, then the little suggestion blobs after
   const conversation = (
     <>
-      {messageList}{isTyping && <ChatMessage role="assistant" text="EBICSA is typing..."></ChatMessage>}
+      {messageList}
+      {isTyping && <ChatMessage role="assistant" text="EBICSA is typing..."></ChatMessage>}
+      {suggestionChips}
     </>
-  )
+  );
 
 
   // this is the input box & send button, stored in a var so both the mini popup and expanded view can use it
@@ -97,7 +113,6 @@ const ChatWidget = () => {
       </InputGroup>
     </Form>
   );
-
 
   // The <> </> (a Fragment) groups the popup, panel, and launcher together, because a component
   // can only return one thing. Unlike a <div>, it adds nothing extra to the page's HTML/CSS styles
