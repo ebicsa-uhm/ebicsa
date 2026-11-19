@@ -21,7 +21,7 @@ const NavBar: React.FC = () => {
             {currentUser && (
               <>
                  {/* Navbar Items, link later  */}
-                <Nav.Link id="add-stuff-nav" href="/course_search" active={pathName === '/course_search'}>
+                <Nav.Link id="add-stuff-nav" href="/courses" active={pathName === '/courses'}>
                   Course Search
                 </Nav.Link>
                 <Nav.Link id="list-stuff-nav" href="/schedule_builder" active={pathName === '/schedule_builder'}>
