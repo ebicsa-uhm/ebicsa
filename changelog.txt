@@ -1,0 +1,690 @@
+================================================================================
+EBICSA - CHANGELOG
+================================================================================
+One section per action/process - do NOT batch multiple actions under a
+single heading. Each entry lists the files changed, what changed, and line
+references. Newest entries are added at the top; after every action
+taken in a session, a new section is added here.
+
+================================================================================
+ACTION: Pathway summary card with structured requirements
+================================================================================
+Date: 2026-11-18
+
+MODIFIED FILES:
+  - src/data/icsCourses.ts
+      Lines 934-957: new PathwayRequirement interface (title, courses?,
+        hint?, text?) and DegreePathway gains description? +
+        requirements?. BA_CORE_COURSES constant shared by BA tracks.
+      All six pathways populated with description text and 2-3 requirement
+        groups (Core Courses / Required Options|Required|Shared Core /
+        Electives|Concentration|Related Courses / Undergraduate &
+        Graduate Picks). Concentration requirements rendered as free text
+        e.g. "one ICS 400-level+ course and four 300-level+ courses".
+  - src/app/courses/page.tsx
+      Lines 100-111: pathwayCourseTitle() resolves codes to catalog
+        titles - exact match first, suffix-less codes ('ICS 691') fall
+        back to numeric match ('ICS 691B'/'691E'); suffixed codes and
+        absent courses return undefined (code shown alone).
+      Lines 510-556: activePathway.note paragraph replaced by framed
+        Card.pathway-card - centered degree-track title, description,
+        responsive col-md requirement columns listing CODE - Title with
+        italic hint rules, note kept as footer.
+  - src/app/globals.css
+      Lines 76-80: .pathway-card border + primary-colored title.
+
+VERIFICATION:
+  - npx eslint src/app/courses/page.tsx src/data/icsCourses.ts: clean
+  - curl /courses: 200
+
+================================================================================
+ACTION: UX batch - live filters, sticky header, chips, sorting, details,
+       mobile cards, print stylesheet
+================================================================================
+Date: 2026-11-18
+
+MODIFIED FILES:
+  - src/app/courses/page.tsx (rewritten, ~620 lines)
+      Live filtering: staged draft/applied filter state and Apply Filters
+        button removed; setFilter() updates results immediately. Search
+        uses useDeferredValue (line 303) to keep typing smooth.
+      SortableTh component (line 264): Course #, Title, Status, Faculty,
+        Meets, Participation headers clickable with ▲/▼ indicators;
+        sorting applied before pagination; aria-label conveys sort state.
+      Active-filter chips (lines 380-405, 482-500): dismissible badges
+        for search/participation/pathway/status, each clearing one filter.
+      Expandable rows: per-row ▸/▾ toggle reveals CourseDetail row
+        (description + gradeMode/attributes); detail rows stay in DOM
+        (d-none when closed) so they print.
+      CourseCard component (line 194): compact card layout under md
+        breakpoint replacing the table on mobile.
+      "/" keyboard shortcut focuses search (lines 320-336).
+  - src/app/globals.css
+      Lines 45-56: .course-table thead th position sticky top 0 with
+        body-bg + border shadow; .sortable-th cursor pointer.
+      Lines 59-73: @media print hides nav/.no-print, forces table
+        visible, hides .course-cards, expands all .course-detail rows.
+      Table responsive prop removed (overflow container breaks sticky);
+        mobile covered by card view instead.
+
+VERIFICATION:
+  - npx eslint src/app/courses/page.tsx: clean (aria-sort on role=button
+    warning fixed by moving sort state into aria-label)
+  - curl /courses: 200
+
+================================================================================
+ACTION: Add BA ICS pathway filters (General, Security Science, CCM)
+================================================================================
+Date: 2026-11-18
+
+MODIFIED FILES:
+  - src/data/icsCourses.ts
+      Lines 986-1120: DEGREE_PATHWAYS now leads with three BA tracks.
+        ba-ics = B.A. ICS General Track (core 9 + pair options 312/331,
+        313/361, 351/451, 222+355). ba-ics-sec = Security Science (core
+        incl. 212-or-215, required 222/355/351-or-451, electives
+        423/425/426/428/455/495; ECE 406 noted but excluded - ICS-only
+        catalog). ba-ics-ccm = Creative Computational Media (core
+        111/211/212/235/311/314/321/355/369/481/487, electives
+        464/482/484/485/486/488/489/496; ICS 110D excluded - shares
+        course number 110 with ICS 110P; MATH requirements noted only).
+      Pathway matching includes all 400-Level courses when a pathway is
+        active (upper-division needed for graduation); graduate courses
+        not auto-included.
+
+VERIFICATION:
+  - npx eslint: clean
+  - curl /courses: 200
+
+================================================================================
+ACTION: Major /courses restructure - academic status column, flat filters
+================================================================================
+Date: 2026-11-18
+
+MODIFIED FILES:
+  - src/data/icsCourses.ts
+      Lines 909-931: CORE_CODES set (BA core 111/141/211/212/241/311/314/
+        321/332), NONCREDIT_CODES (empty pending confirmation), and
+        courseStatus() returning 'Core' | 'Undergraduate' | 'Graduate'
+        (courseNumber >= 500) | 'Noncredit'. CourseStatus type exported.
+  - src/app/courses/page.tsx
+      Removed filters: credits chips, professor select, level select
+        (state, LEVELS, CREDIT_OPTIONS, professors memo all deleted).
+        Remaining filters: search, participation, pathway, status.
+      Columns reordered to: toggle, Course #, Title, Status (academic
+        badge: Core=success green, Undergraduate=primary, Graduate=info,
+        Noncredit=secondary), Faculty, Location, Prerequisites, Meets
+        (renamed from Typical Schedule), Participation. Old trailing
+        Status column removed.
+      Level-group h2 separators and groups memo removed - flat table.
+      Status filter repurposed to enrollment status via sectionStatus().
+
+VERIFICATION:
+  - npx eslint: clean
+  - curl /courses: 200
+
+================================================================================
+ACTION: Modernize credits control and add section-status filter
+================================================================================
+Date: 2026-11-18
+
+MODIFIED FILES:
+  - src/data/icsCourses.ts
+      Lines 27-28: IcsCourse gained optional seatsOpen / waitlistOpen
+        counts. Lines 879-885: new SectionStatus type ('Open' | 'Waitlist'
+        | 'Closed' | 'Full') and sectionStatus() - seatsOpen > 0 or unknown
+        -> 'Open'; seatsOpen == 0 -> 'Waitlist' if waitlist has space else
+        'Full'. 'Closed' reserved for sections closed to enrollment.
+      Lines 864-865: ICS 692 (CRN 56324) marked seatsOpen: 0,
+        waitlistOpen: 1 per its "Waitlist only" note (placeholder count).
+  - src/app/courses/page.tsx
+      Credits checkbox Dropdown replaced with inline pill toggle chips
+        (1-4) in the same grid cell; Dropdown import, creditsSummary and
+        allCreditsChecked removed.
+      New "Any Status" select (Any/Open/Waitlist/Closed/Full) driven by
+        sectionStatus().
+
+      NOTE: seat/waitlist counts are not yet populated for most sections,
+        so Open/Waitlist/Full distinctions are mostly placeholders until
+        real Star GPS seat data is added per CRN.
+
+VERIFICATION:
+  - npx eslint: clean
+  - curl /courses: 200
+
+================================================================================
+ACTION: Restyle pagination and restructure filter bar into 3x2 rounded grid
+================================================================================
+Date: 2026-11-18
+
+MODIFIED FILES:
+  - src/app/courses/page.tsx
+      Pagination wrapper switched to justify-content-end; <Pagination>
+        gained size="sm" and className="pagination-compact".
+      Filter bar rebuilt as row g-2 grid (col-lg-4 cells -> 3x2 on desktop,
+        2-per-row tablet, 1-per-row mobile); all Form.Select/Form.Control
+        controls and buttons given rounded-pill styling; Apply/Clear
+        buttons moved into the grid.
+  - src/app/globals.css
+      Lines 27-42: .pagination-compact strips page-link borders/backgrounds,
+        shrinks padding to 0.1rem 0.35rem and font to 0.8rem; active page
+        renders as bold primary text, disabled items fade out.
+
+VERIFICATION:
+  - npx eslint src/app/courses/page.tsx: clean
+  - curl /courses: 200
+
+================================================================================
+ACTION: Center credits column and apply render micro-optimizations
+================================================================================
+Date: 2026-11-12
+
+MODIFIED FILES:
+  - src/app/courses/page.tsx
+      Line 28: added UH_BADGE_STYLE constant - hoists the inline
+        { backgroundColor: '#024731' } object out of render.
+      Line 257: UH Mānoa Badge uses UH_BADGE_STYLE.
+      Line 141: Credits cell gets text-center; line 419: Credits header
+        gets text-center.
+      Lines 66-92: parseSchedule() results cached in module-level
+        scheduleCache Map - many sections share identical schedule strings,
+        so each unique string parses only once across all rows.
+
+      NOTE: pipeline was already memoized (filtered/paged/groups/
+        professors useMemo, CourseRow React.memo, staged draft filters so
+        typing never refilters). Remaining wins were the schedule-parse
+        cache and constant hoisting; production build recommended over dev
+        server for further smoothness.
+
+VERIFICATION:
+  - npx eslint src/app/courses/page.tsx: clean
+  - curl /courses: 200
+
+================================================================================
+ACTION: Remove grade-mode tag from Credits column
+================================================================================
+Date: 2026-11-12
+
+MODIFIED FILES:
+  - src/app/courses/page.tsx
+      Line 141: Credits cell reduced to just {course.credits} - removed the
+        gradeMode sub-line ("Letter Plus/Minus, Credit/No Credit" /
+        "Letter Plus/Minus"). gradeMode data retained in icsCourses.ts and
+        the IcsCourse type for potential future use.
+
+VERIFICATION:
+  - npx eslint src/app/courses/page.tsx: clean
+  - curl /courses: 200
+
+================================================================================
+ACTION: Adjust Typical Schedule column width (user edit)
+================================================================================
+Date: 2026-11-12
+
+MODIFIED FILES:
+  - src/app/courses/page.tsx
+      Line 421: Typical Schedule <th> width set to 12% (user-adjusted from
+        an initial 18% set to give multi-pattern bullets more room).
+
+================================================================================
+ACTION: Convert schedule times to 24-hour format
+================================================================================
+Date: 2026-11-12
+
+MODIFIED FILES:
+  - src/app/courses/page.tsx
+      Lines 59-64: added to24h() - regex-converts "9:00 AM"/"1:30 PM" style
+        times to "09:00"/"13:30" (handles 12 AM/PM edge cases).
+      Lines 80, 87, 89: to24h() applied to every parsed schedule label.
+        Conversion happens at display time only - icsCourses.ts data keeps
+        original AM/PM strings; "Online async"/"Online sync"/"TBA" pass
+        through unchanged. Chosen over shrinking the font per user request.
+
+VERIFICATION:
+  - npx eslint src/app/courses/page.tsx: clean
+  - curl /courses: 200
+
+================================================================================
+ACTION: Split building location into its own column, uncolor schedule times
+================================================================================
+Date: 2026-11-12
+
+MODIFIED FILES:
+  - src/app/courses/page.tsx
+      Lines 52-57: SchedulePattern interface - { label, location?, online }.
+      Lines 68-92: parseSchedule() splits each " + "-joined schedule pattern:
+        ", UHM ..." tails become location, ", Online sync" tails mark the
+        pattern online, "Online async"/"TBA" handled.
+      Lines 114-118: CourseRow derives patterns + unique locations list
+        ("Online" appended when any pattern is online).
+      Lines 143-146: Typical Schedule cell renders ScheduleList of labels
+        only (days + time); new Location cell joins unique locations with
+        ", " (e.g. "UHM ART 132, UHM POST 318A, Online"; "—" for TBA).
+      Line 422: "Location" added to table header between Typical Schedule
+        and Format.
+      Removed `text-primary` (blue) styling from online schedule bullets -
+        all schedule text now renders default color; the "•"/"◦" glyphs
+        remain as the only online/in-person distinction.
+
+VERIFICATION:
+  - npx eslint src/app/courses/page.tsx: clean
+  - curl /courses: 200
+
+================================================================================
+ACTION: Add degree pathway filter and bullet-style schedule list
+================================================================================
+Date: 2026-11-12
+
+MODIFIED FILES:
+  - src/data/icsCourses.ts
+      Line 227: ICS 141 schedule merged - separate "F" and "TR" meetings at
+        the same time/room combined into "TRF 1:30 PM - 2:45 PM, UHM POST
+        318A". ICS 241 intentionally left as two entries (same time, different
+        rooms POST 126 vs POST 318A - merging would lose room info).
+      Lines 882-908: added courseNumber() helper (extracts numeric course
+        number so "ICS 691B"/"691E" match pathway code 691), DegreePathway
+        type, SHARED_CORE list (ICS 111, 141, 211, 212, 241, 311, 314 required
+        by all pathways per user assumption).
+      Lines 912+: DEGREE_PATHWAYS - three BS/MS double-count pathways:
+        * BS+MS Computer Science: undergrad pick-one (414/435/451/466) + up to
+          two of (613/621/632/664/691), min grade B not B-
+        * BS CS/Data Science + MS CS: undergrad (451/466/483/491) + up to two
+          of (613/621/622/664/691), min grade B
+        * BS CS/Security Science + MS CS: undergrad (423/426/455/495) + up to
+          two of (621/623/655/691), min grade B
+        Each carries a `note` covering the B-grade rule and the BAM ICS 690
+        (1 cr) add-on / 5th-year Fall requirement.
+
+  - src/app/courses/page.tsx
+      Lines 14-22: imports courseNumber, DEGREE_PATHWAYS.
+      Lines 159, 168: pathway added to Filters interface and DEFAULT_FILTERS
+        ('Any').
+      Lines 204-206: activePathway memo resolves applied.pathway to a
+        DegreePathway.
+      Lines 211-215: AND-condition in filtered - when a pathway is active,
+        only courses whose courseNumber is in the pathway set pass.
+      Line 229: useMemo deps extended with activePathway.
+      Lines 314-326: "Any Pathway" Form.Select in the filter bar (staged -
+        applies on Apply Filters like other filters).
+      Lines 374-375: centered note under the results line showing the
+        pathway's double-count rules when active.
+      Lines 95-110: ScheduleList component - schedule string split on " + ";
+        in-person patterns render with bullet "•", online patterns with "◦"
+        grouped after in-person entries; single-pattern schedules render as
+        plain text.
+
+VERIFICATION:
+  - Pathway match counts verified via script: 23 / 23 / 22 sections
+  - npx eslint on both files: clean
+  - curl /courses: 200
+
+================================================================================
+ACTION: Truncate descriptions to 3 lines, fix duplicate row keys, real .small
+================================================================================
+Date: 2026-11-12
+
+MODIFIED FILES:
+  - src/app/globals.css (lines 15-23)
+      Added `.small { font-size: 0.875em }` - the class was used throughout
+        the courses page but is NOT a Bootstrap 5 utility, so it was a
+        no-op and text rendered at full body size.
+      Added `.course-description` - -webkit-line-clamp: 3 with overflow
+        hidden, capping descriptions at 3 lines with ellipsis.
+  - src/app/courses/page.tsx
+      Lines 63-67: description div uses `course-description` class
+      Line 330: row key changed `c.code` -> `c.crn ?? c.code` - duplicate
+        course codes across sections produced duplicate React keys within
+        a table body (reconciliation warnings / potential stale rows);
+        CRN is unique per section.
+      Lines 266-273: (user edit) "Clear Filters" secondary Button moved
+        inline next to "Apply Filters" with ms-2 spacing.
+
+VERIFICATION:
+  - npx eslint src/app/courses/page.tsx: clean
+  - curl /courses: 200
+
+================================================================================
+ACTION: Replace course catalog with Spring 2027 Star GPS section data
+================================================================================
+Date: 2026-11-12
+
+MODIFIED FILES:
+  - src/data/icsCourses.ts (rewritten, 879 lines)
+      Source changed from the curated uh_manoa_ics_courses.txt subset to
+      per-CRN Spring 2027 (Jan 11 - May 14, 2027) Star GPS listings.
+      IcsCourse type (lines 10-21) gained: crn, section, gradeMode,
+      attributes, description; rating field kept but unused.
+      Lines 27-28: GRADE_CN / GRADE_L constants for normalized grade modes.
+      Lines 30-866: icsCourses array - 57 section entries; repeated course
+        codes are separate entries per CRN (e.g. 8x ICS 101, 4x ICS 111).
+      Lines 868-879: courseParticipation/courseLevel helpers unchanged.
+
+      Field mapping from Star GPS:
+        - crn/section     <- CRN / Section fields
+        - credits         <- "3cr" -> "3"
+        - gradeMode       <- Grade Mode (normalized to
+                            'Letter Plus/Minus[, Credit/No Credit]')
+        - attributes      <- Attributes (FQ, NI, ETH/OC/WI) where present
+        - participation   <- Instruc. Type (standard->In-Person,
+                            Hybrid->Hybrid, Distance->Online)
+        - prerequisites   <- structured Prerequisites text cleaned of
+                            artifacts (., w/C, cncr); narrative "Pre:" used
+                            when no structured field exists
+        - schedule        <- meeting patterns "TR 9:00 AM - 10:15 AM,
+                            UHM POST 318A" joined with " + ";
+                            TBA|ONLINE ASYNC -> "Online async"
+        - faculty         <- instructor name (emails dropped)
+        - description     <- Narrative with redundant "Pre:" tail stripped
+        - notes           <- flags only: "Instructor approval required"
+                            (ICS 390), "Waitlist only" (ICS 692 CRN 56324),
+                            "Computer experience recommended" (ICS 111)
+        - seats/waitlist counts intentionally omitted
+
+      BUG FIX: removed `export const [page, setPage] = useState(1)` and
+        `export const PAGE_SIZE` - a hook call at module top level (invalid
+        hook call) that nothing imported; page state lives in page.tsx.
+
+  - src/app/courses/page.tsx
+      Lines 52-60: code cell shows "CRN {crn} . Sec {section}" under code
+      Lines 61-71: title cell shows description + italic notes
+      Lines 72-75: credits cell shows gradeMode underneath
+      Line 78:  table cell now renders courseParticipation(course)
+      Line 324: header "Rating" -> "Format" (no rating data exists anymore)
+      Line 176: subheader updated - "Spring 2027 schedules and faculty
+        compiled from Star GPS (Jan 11 - May 14, 2027)"
+
+VERIFICATION:
+  - 57 entries confirmed via grep count
+  - npx eslint on both files: clean
+  - curl /courses: 200; dev server compiled cleanly
+
+================================================================================
+ACTION: Add client-side pagination to /courses
+================================================================================
+Date: 2026-11-12
+
+MODIFIED FILES:
+  - src/app/courses/page.tsx
+      Line 11:  added Pagination to react-bootstrap import
+      Line 25:  new PAGE_SIZE = 10 constant
+      Line 105: new `page` state (default 1)
+      Lines 120-123: applyFilters() now also resets page to 1 (prevents
+        landing on an empty page after filtering)
+      Lines 151-155: `pageCount` + `paged` memo - slices `filtered` to the
+        current page before grouping
+      Lines 157-164: `groups` memo now derives from `paged` (was `filtered`)
+      Lines 275-278: "Showing X of Y" line appends "page N of M" when
+        paginated
+      Lines 284-306: centered react-bootstrap <Pagination> (Prev, numbered
+        items, Next) rendered only when pageCount > 1
+
+DESIGN NOTES:
+  - Pagination is client-side only: icsCourses is a static in-memory
+    array, so slicing is cheap and no server/DB work is involved.
+  - Paginates the FLAT filtered list, then re-groups the page slice by
+    level - group sizes vary per page by design.
+
+VERIFICATION:
+  - npx eslint src/app/courses/page.tsx: clean
+  - curl /courses: 200; dev server compiled without errors
+
+================================================================================
+ACTION: Silence Next.js workspace-root warning (turbopack.root)
+================================================================================
+Date: 2026-11-12
+
+MODIFIED FILES:
+  - next.config.mjs (rewritten, 11 lines)
+      Added `turbopack.root` set to the project directory via
+      path.dirname(fileURLToPath(import.meta.url)). Fixes the dev-server
+      warning "Next.js inferred your workspace root ... multiple
+      lockfiles" caused by a stray C:\Users\stars\package-lock.json.
+
+NOTES:
+  - next.config.ts still exists but is DEAD CODE: Next.js loads the first
+    match in .js -> .mjs -> .ts order, and next.config.mjs wins. Candidate
+    for deletion (also flagged in PROJECT_NOTES.txt).
+
+VERIFICATION:
+  - npm run dev: warning gone, server Ready on :3000
+  - Note: killing the shell did NOT kill the child `next dev` process -
+    had to taskkill orphaned PID 14340 holding :3000 and the .next lock.
+
+================================================================================
+ACTION: Performance pass on /courses page
+================================================================================
+Date: 2026-11-10
+
+MODIFIED FILES:
+  - src/app/courses/page.tsx
+      Line 3:   added `memo` to react import
+      Lines 39-55: `CourseRow` wrapped in React.memo (named function to
+        satisfy react/display-name lint rule) - rows now skip re-rendering
+        when draft filter state changes but the course objects are
+        referentially unchanged, since `filtered`/`groups` are memoized
+        and icsCourses entries are stable references
+
+ANALYSIS / REJECTED OR DEFERRED OPTIMIZATIONS:
+  - Server/client split (static header as server component): marginal gain
+    at 30 courses; revisit if page grows.
+  - Pagination/virtualization: unnecessary at 30 rows; worth adding if the
+    dataset grows to the full ~137-course catalog.
+  - Precomputed per-course search haystack: filter runs once per Apply
+    click over 30 items - negligible.
+  - Debounced search: moot - search only applies on Apply Filters click.
+
+VERIFICATION:
+  - npm run lint: clean
+  - curl /courses: 200
+================================================================================
+
+================================================================================
+ACTION: Add professor filter, credits "All" checkbox, staged Apply Filters button
+================================================================================
+Date: 2026-11-10
+
+MODIFIED FILES:
+  - src/app/courses/page.tsx (now ~240 lines)
+      Lines 4:    added Button import from react-bootstrap
+      Lines ~56-65: new `Filters` interface + `DEFAULT_FILTERS` constant
+      Lines ~67-105: state reworked - single draft `filters` object +
+        `applied` snapshot; `setFilter()` helper; `applyFilters()` copies
+        draft -> applied. Results now ONLY change when Apply Filters is
+        clicked (staged filtering)
+      Lines ~107-113: `professors` useMemo - unique instructor names parsed
+        from faculty strings (split on '/'), sorted, prefixed with 'Any'
+      Lines ~119-120: professor filter - substring match on faculty field
+      Lines ~150-160: search/level/participation/credits controls now bind
+        to draft `filters` instead of live state
+      Lines ~161-172: new Professor Form.Select ("Any Professor" default)
+      Lines ~181-190: credits dropdown gained "All" checkbox (with divider)
+        - checks/unchecks all of 1-4 at once
+      Lines ~207-211: centered "Apply Filters" Button under the filter bar
+
+NOTES:
+  - Professor list includes non-person entries from the data
+    ("Department Staff", "Department Pool / Lab Lecturers", etc.) since
+    they appear in the faculty field - rename label later if desired.
+  - Professor matching is substring-based on the faculty string, so
+    co-taught courses appear under each instructor's name.
+
+VERIFICATION:
+  - npm run lint: clean
+  - curl /courses: 200; "Apply Filters" button, "Any Professor" option,
+    and professor names render
+================================================================================
+
+================================================================================
+ACTION: Rework course filters - level dropdown, participation dropdown, credits checkboxes
+================================================================================
+Date: 2026-11-10
+
+MODIFIED FILES:
+  - src/data/icsCourses.ts
+      Lines 1-13: added `Participation` type ('In-Person' | 'Hybrid' |
+        'Online') and optional `participation` field on `IcsCourse`
+      Lines ~360-366: added `courseParticipation()` helper - defaults to
+        'In-Person' when unset (source data has no modality info; assumed
+        until verified per-section in Star GPS)
+  - src/app/courses/page.tsx (rewritten, 202 lines)
+      Lines 7-9:   added PARTICIPATION options and CREDIT_OPTIONS constants;
+                   removed Nav pill level filter
+      Lines 16-35: new `creditsSummary()` - contiguous selections render as
+                   ranges ("1-2", "1-4"), non-contiguous as individual
+                   values ("1, 3", "2, 4"), empty -> "Any"
+      Lines 60-61: credits toggle state (number[])
+      Lines 66-79: filter logic - level select, participation select
+                   ('Any' = no filter), credits checkbox set (non-numeric
+                   credits like "Variable" excluded when credits selected)
+      Lines ~118-160: filter bar - three centered controls: level
+                   Form.Select, participation Form.Select (default 'Any'),
+                   credits Dropdown (autoClose=false) with 1-4 credit
+                   checkboxes; toggle label shows creditsSummary()
+      Removed: Nav variant="pills" level selector and Nav import
+
+VERIFICATION:
+  - npm run lint: clean
+  - curl /courses: 200; filter controls render (All Levels,
+    Any Participation, Credits dropdown present)
+================================================================================
+
+================================================================================
+ACTION: Navbar restyle + courses page header rework
+================================================================================
+Date: 2026-11-10
+
+MODIFIED FILES:
+  - src/components/Navbar.tsx (rewritten, 63 lines)
+      Line 8:   added UHM_GREEN constant = '#024731' (official UH Mānoa green,
+                Pantone 3435C per manoa.hawaii.edu/brand)
+      Line 15:  Navbar variant="dark" + inline backgroundColor UHM_GREEN
+                (was bg="light")
+      Lines 17-23: brand is now a two-line block - bold "EBICSA" with small
+                subtitle "Even Better ICS Academic Advising" + green
+                "UH Mānoa" Badge (#009A44 Kelly Green)
+      Line 27:  Courses nav link moved into right-side Nav with
+                ms-auto/justify-content-end (was left side); login dropdown
+                follows it on the far right
+      Line 5:   added Badge import from react-bootstrap
+  - src/app/courses/page.tsx
+      Line 4:   added Breadcrumb import
+      Lines 51-61: page header reworked - added centered Breadcrumb
+                (Home / Search ICS Courses), h1 changed "ICS Course Browser"
+                -> "Search ICS Courses" (text-center), subheader now
+                text-center with "UH Mānoa" Badge (#024731) appended;
+                Container changed fluid -> fixed so content edges align
+                with the EBICSA brand in the navbar
+      Lines 63-73: search input wrapped in d-flex justify-content-center
+  - src/app/page.tsx
+      Line 6:   Container fluid -> fixed (same edge alignment as navbar)
+  - tests/john-pages.spec.ts
+      Line 22:  expected heading updated "ICS Course Browser" ->
+                "Search ICS Courses"
+
+VERIFICATION:
+  - npm run lint: clean
+  - curl /courses: 200; contains "Search ICS Courses", breadcrumb markup,
+    #024731 badge
+  - Playwright john-pages.spec.ts (chromium): PASSED (reused saved session)
+================================================================================
+
+================================================================================
+ACTION: Add ICS course browser page (/courses)
+================================================================================
+Date: 2026-11-10
+
+NEW FILES:
+  - src/data/icsCourses.ts (365 lines)
+      Line 1:   `IcsCourse` type (code, title, credits, prerequisites,
+                schedule, faculty, rating, notes)
+      Line 16:  `icsCourses` array - 30 courses transcribed from
+                "uh_manoa_ics_courses (2).txt" (undergrad + grad)
+      Line 358: `courseLevel()` helper - maps course number to
+                100-Level / 200-Level / 300-Level / 400-Level / Graduate
+  - src/app/courses/page.tsx (126 lines at time of creation)
+      Harvard DCE course-browser style: search input, level filter pills,
+      grouped striped tables (Course #, Title, Credits, Faculty,
+      Typical Schedule, Rating, Prerequisites)
+      (Note: this file was further modified by later actions - see
+      "Navbar restyle + courses page header rework" below)
+
+MODIFIED FILES:
+  - src/components/Navbar.tsx
+      Added public "Courses" nav link -> /courses
+      Removed Add Stuff / List Stuff / Admin links
+      Removed unused `role` variable
+  - src/app/auth/signin/page.tsx
+      Line 17: callbackUrl '/list' -> '/'
+  - src/app/auth/signup/page.tsx
+      Line 43: callbackUrl '/add' -> '/'
+  - src/app/layout.tsx
+      Lines 21-22: metadata title -> "EBICSA - UH Mānoa ICS",
+        description -> "UH Mānoa Information and Computer Sciences
+        course browser"
+  - src/app/page.tsx (rewritten, 25 lines)
+      Template landing replaced with EBICSA landing: heading, description,
+      and "Browse Courses" button -> /courses (lines 9-17)
+  - tests/john-pages.spec.ts (rewritten, 25 lines)
+      Now authenticates as john@foo.com, asserts "Courses" nav link,
+      clicks it, expects course browser heading
+      (heading text later updated - see next section)
+
+DATA NOTES:
+  - uh_manoa_ics_courses (2).txt is a CURATED subset (~30 courses) with
+    schedule/faculty/rating data - NOT the full 137-course catalog scrape
+    (that scrape is still incomplete; ~21 course detail pages pending).
+  - ICS 110 title corrected to "Introduction to Computer Programming"
+    (txt had it duplicated as "Introduction to Computer Science I").
+
+VERIFICATION PERFORMED:
+  - npm run lint: clean
+  - npm run build: passes; routes now /, /courses, /auth/*, /not-authorized
+  - Playwright (chromium) john-pages.spec.ts: PASSED
+    (note: first run failed due to a stale orphaned `next dev` process on
+    :3000 - killed PID 62860 and restarted; auth itself was fine)
+  - Manual curl: /courses -> 200 with course data; /list /add /admin -> 404
+
+================================================================================
+ACTION: Remove Stuff CRUD feature and its dependencies
+================================================================================
+Date: 2026-11-10
+
+REMOVED FILES (deleted entirely):
+  - src/app/add/page.tsx                 (Add Stuff page)
+  - src/app/list/page.tsx                (List Stuff page)
+  - src/app/edit/[id]/page.tsx           (Edit Stuff page)
+  - src/app/admin/page.tsx               (Admin list-all-stuff page)
+  - src/components/AddStuffForm.tsx
+  - src/components/EditStuffForm.tsx
+  - src/components/StuffItem.tsx
+  - src/components/StuffItemAdmin.tsx
+  - src/lib/validationSchemas.ts         (only contained Add/EditStuffSchema)
+  - prisma/seed.ts                       (dead duplicate of src/seed.ts)
+  - tests/admin-pages.spec.ts            (tested the removed admin page)
+
+MODIFIED FILES:
+  - src/lib/dbActions.ts (rewritten, 34 lines)
+      Lines 10-23: `createUser()` - unchanged behavior, kept
+      Lines 25-34: `changePassword()` - unchanged behavior, kept
+      Removed: addStuff, editStuff, deleteStuff and their imports
+      (Condition, Stuff, redirect)
+  - src/seed.ts (rewritten, 30 lines)
+      Removed Stuff seeding loop and Condition import; still upserts
+      defaultAccounts users only
+  - config/settings.development.json
+      Removed "defaultData" array (stuff seed data); kept defaultAccounts
+  - prisma/schema.prisma
+      Removed `Condition` enum and `Stuff` model; kept Role enum + User
+  - prisma/migrations/20261110230000_remove_stuff/migration.sql (new)
+      Drops table "Stuff" and enum "Condition"
+
+VERIFICATION PERFORMED:
+  - npx prisma migrate deploy: applied 20261110230000_remove_stuff
+  - npx prisma generate: client regenerated without Stuff/Condition
+  - grep: no remaining stuff/Stuff/Condition references in src/ or tests/
+
+================================================================================
+ACTION: Create changelog.txt
+================================================================================
+  - changelog.txt (new file)
+      Running log of all project changes with per-file line references.

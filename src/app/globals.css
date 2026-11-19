@@ -12,3 +12,6 @@ body {
   display: flex;
   flex-direction: column;
 }
+.small {
+  font-size: 0.875em;
+}
