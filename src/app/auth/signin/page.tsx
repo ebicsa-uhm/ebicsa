@@ -11,7 +11,11 @@ const SignIn = () => {
       email: { value: string };
       password: { value: string };
     };
+<<<<<<< Updated upstream
   await signIn('credentials', {
+=======
+    await signIn('credentials', {
+>>>>>>> Stashed changes
       callbackUrl: '/',
       email: target.email.value,
       password: target.password.value,
