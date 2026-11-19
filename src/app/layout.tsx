@@ -5,6 +5,7 @@ import "./globals.css";
 import Footer from '@/components/Footer';
 import NavBar from '@/components/Navbar';
 import Providers from './providers';
+import ChatWidget from "@/components/chat/ChatWidget";
 
 
 const geistSans = Geist({
@@ -31,10 +32,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={classString}>
-       <Providers>
+      <Providers>
           <NavBar />
           {children}
           <Footer />
+          <ChatWidget/> 
+          {/* Adding the widget below the footer and children to render on every page */}
         </Providers>
       </body>
     </html>
