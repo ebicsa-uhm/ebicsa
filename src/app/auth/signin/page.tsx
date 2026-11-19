@@ -12,9 +12,9 @@ const SignIn = () => {
       password: { value: string };
     };
     await signIn('credentials', {
-      callbackUrl: '/signin/page.tsx',
-      email: target.email.value,
-      password: target.password.value,
+      callbackUrl: '/',
+      email,
+      password,
     });
   };
 
