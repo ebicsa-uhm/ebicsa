@@ -21,28 +21,16 @@ const NavBar: React.FC = () => {
             {currentUser && (
               <>
                  {/* Navbar Items, link later  */}
-                <Nav.Link id="add-stuff-nav" href="/course_search" active={pathName === '/course_search'}>
-                  Course Search
+                <Nav.Link id="add-stuff-nav" href="/courses" active={pathName === '/courses'}>
+                  Courses
                 </Nav.Link>
-                <Nav.Link id="list-stuff-nav" href="/schedule_builder" active={pathName === '/schedule_builder'}>
+                <Nav.Link id="list-stuff-nav" href="/schedule-builder" active={pathName === '/schedule-builder'}>
                   Schedule Builder
                 </Nav.Link>
-                <Nav.Link id="list-stuff-nav" href="/my_schedules" active={pathName === '/my_schedules'}>
+                <Nav.Link id="list-stuff-nav" href="/my-schedules" active={pathName === '/my-schedules'}>
                   My Schedules
                 </Nav.Link>
-                <Nav.Link id="list-stuff-nav" href="/degree_pathways" active={pathName === '/degree_pathways'}>
-                  Degree Pathways
-                </Nav.Link>
-                <Nav.Link id="list-stuff-nav" href="/help" active={pathName === '/help'}>
-                  Help
-                </Nav.Link>
               </>
-            )}
-            {/* For Admins */}
-            {currentUser && role === 'ADMIN' && (
-              <Nav.Link id="admin-stuff-nav" href="/admin" active={pathName === '/admin'}>
-                Admin
-              </Nav.Link>
             )}
           </Nav>
           <Nav>
