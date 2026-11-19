@@ -14,10 +14,10 @@ test('can authenticate a specific user', async ({ getUserPage }) => {
 
   // Now check for navigation links and headings
   await expect(
-    customUserPage.getByRole('link', { name: 'Courses' })
+    customUserPage.getByRole('link', { name: 'Courses', exact: true })
   ).toBeVisible({ timeout: 5000 });
 
-  await customUserPage.getByRole('link', { name: 'Courses' }).click();
+  await customUserPage.getByRole('link', { name: 'Courses', exact: true }).click();
   await expect(
     customUserPage.getByRole('heading', { name: 'Search ICS Courses' })
   ).toBeVisible({ timeout: 5000 });
