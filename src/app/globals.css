@@ -79,3 +79,9 @@ body {
 .pathway-card .card-title {
   color: var(--bs-primary);
 }
+
+/* Keep the Meets column wide enough for schedule bullets even on pages
+   dominated by closed catalog entries (whose cells are just "—"). */
+.course-table .meets-col {
+  min-width: 12rem;
+}

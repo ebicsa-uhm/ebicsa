@@ -613,7 +613,7 @@ const CourseBrowser = () => {
               <SortableTh label="Faculty" sortKey="faculty" {...thProps} />
               <th>Location</th>
               <th>Prerequisites</th>
-              <SortableTh label="Meets" sortKey="meets" {...thProps} />
+              <SortableTh label="Meets" sortKey="meets" {...thProps} className="meets-col" />
               <SortableTh label="Participation" sortKey="participation" {...thProps} />
             </tr>
           </thead>
