@@ -44,65 +44,88 @@ const SignUp = () => {
   };
 
   return (
-    <main>
+    <main className="signin-page">
       <Container>
-        <Row className="justify-content-center">
-          <Col xs={5}>
-            <h1 className="text-center">Sign Up</h1>
-            <Card>
-              <Card.Body>
+        <Card className="signin-card border-0">
+          <Row className="g-0">
+            {/* the left image thing */}
+            <Col md={6} className="signin-image d-none d-md-flex">
+              <div className="signin-image-text">
+                <div className="smallStuff1">EBICSA</div>
+                <h2 className="bigStuff1">
+                  Plan your ICS path, <span className="bigStuff2">starting today.</span>
+                </h2>
+                <p className="smallStuff2">
+                  Create an account to save your setup, schedules, and chat history.
+                </p>
+              </div>
+            </Col>
+
+            {/* the actual form itself */}
+            <Col md={6} className="signin-form-side">
+              <div className="signin-form">
+                {/* the pill that switches n stuff */}
+                <div className="signin-tabs">
+                  <a href="/auth/signin" className="signin-tab">Sign in</a>
+                  <a href="/auth/signup" className="signin-tab active">Sign up</a>
+                </div>
+
+                <h1 className="signin-title">Create your account</h1>
+                <p className="subText1">Sign up with your UH email.</p>
+
                 <Form onSubmit={handleSubmit(onSubmit)}>
-                  <Form.Group className="form-group">
-                    <Form.Label>Email</Form.Label>
-                    <input
+                  <Form.Group controlId="signupEmail" className="mb-3">
+                    <Form.Label>UH email</Form.Label>
+                    <Form.Control
                       type="text"
+                      placeholder="yourname@hawaii.edu"
+                      isInvalid={!!errors.email}
                       {...register('email')}
-                      className={`form-control ${errors.email ? 'is-invalid' : ''}`}
                     />
-                    <div className="invalid-feedback">{errors.email?.message}</div>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.email?.message}
+                    </Form.Control.Feedback>
                   </Form.Group>
 
-                  <Form.Group className="form-group">
+                  <Form.Group controlId="signupPassword" className="mb-3">
                     <Form.Label>Password</Form.Label>
-                    <input
+                    <Form.Control
                       type="password"
+                      placeholder="Your password"
+                      isInvalid={!!errors.password}
                       {...register('password')}
-                      className={`form-control ${errors.password ? 'is-invalid' : ''}`}
                     />
-                    <div className="invalid-feedback">{errors.password?.message}</div>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.password?.message}
+                    </Form.Control.Feedback>
                   </Form.Group>
-                  <Form.Group className="form-group">
-                    <Form.Label>Confirm Password</Form.Label>
-                    <input
+
+                  <Form.Group controlId="signupConfirmPassword">
+                    <Form.Label>Confirm password</Form.Label>
+                    <Form.Control
                       type="password"
+                      placeholder="Re-enter your password"
+                      isInvalid={!!errors.confirmPassword}
                       {...register('confirmPassword')}
-                      className={`form-control ${errors.confirmPassword ? 'is-invalid' : ''}`}
                     />
-                    <div className="invalid-feedback">{errors.confirmPassword?.message}</div>
+                    <Form.Control.Feedback type="invalid">
+                      {errors.confirmPassword?.message}
+                    </Form.Control.Feedback>
                   </Form.Group>
-                  <Form.Group className="form-group py-3">
-                    <Row>
-                      <Col>
-                        <Button type="submit" className="btn btn-primary">
-                          Register
-                        </Button>
-                      </Col>
-                      <Col>
-                        <Button type="button" onClick={() => reset()} className="btn btn-warning float-right">
-                          Reset
-                        </Button>
-                      </Col>
-                    </Row>
-                  </Form.Group>
+
+                  <Button type="submit" className="signin-submit mt-4 w-100">
+                    Create account
+                  </Button>
                 </Form>
-              </Card.Body>
-              <Card.Footer>
-                Already have an account?
-                <a href="/auth/signin">Sign in</a>
-              </Card.Footer>
-            </Card>
-          </Col>
-        </Row>
+
+                <p className="text-center mt-3 subText1">
+                  Already have an account?{' '}
+                  <a href="/auth/signin" className="signin-link">Sign in</a>
+                </p>
+              </div>
+            </Col>
+          </Row>
+        </Card>
       </Container>
     </main>
   );
