@@ -12,12 +12,7 @@ type ChatView = 'closed' | 'mini' | 'expanded'; // the only 3 views the widget c
 
 
 const sampleMessages: Message[] = [
-  { id: 1, role: 'user', text: 'Do I need ICS 241 before ICS 311?'},
-  { id: 2, role: 'assistant', text:"Yes. ICS 311 (Algorithms) lists ICS 241 as a prerequisite. You've finished ICS 141, so you can take ICS 241 next term."},
-  { id: 3, role: 'user', text: 'Thanks!' },
-  { id: 4, role: 'assistant', text:"Gg ferkin ez"},
-  { id: 5, role: 'user', text:"hey"},
-  { id: 6, role: 'assistant', text:"u da copycat"}
+  { id: 1, role: 'assistant', text:"Aloha! Ask about a course or prerequisite whenever you're ready."},
 ]; //hmmm this is just an array version that simplifies the process of mapping messages
 
 // makes a unique id for a new message (the current time in ms).
@@ -116,7 +111,7 @@ const ChatWidget = () => {
     <Form onSubmit ={handleSubmit}>
       <InputGroup> {/* puts the text box and button together into one rounded bar lie the mockup */}
         <Form.Control 
-          placeholder="What's got u so worked up?" 
+          placeholder="Ask about a course or prerequisite..." 
           aria-label="Message the chat assistant" 
           value={draft} 
           onChange={(event) => setDraft(event.target.value)} // onChange={. . .} means that on every keystroke, draft is updated to what's in the box. event.target is the input element, and .value is its current text
