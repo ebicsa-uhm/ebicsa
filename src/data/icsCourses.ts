@@ -26,6 +26,8 @@ export type IcsCourse = {
   notes?: string;
   seatsOpen?: number;
   waitlistOpen?: number;
+  /** Catalog-only entry not offered in the current term; shows 'Closed'. */
+  closed?: boolean;
 };
 
 const GRADE_CN = 'Letter Plus/Minus, Credit/No Credit';
@@ -864,6 +866,819 @@ export const icsCourses: IcsCourse[] = [
     seatsOpen: 0,
     waitlistOpen: 1,
   },
+
+  // Catalog entries (not offered in Spring 2027 - closed). Added so
+  // pathway/prerequisite course references resolve to real titles.
+  {
+    code: 'ICS 235',
+    title: 'Machine Learning Methods',
+    credits: '3',
+    gradeMode: 'A-F only',
+    prerequisites: 'MATH 241, MATH 203, MATH 215, or MATH 251A',
+    description:
+      'Introduction to contemporary mathematical methods for empirical inference, data modeling, and machine learning.',
+    notes: 'Fall only - Cross-listed: DATA 235',
+    closed: true,
+  },
+  {
+    code: 'ICS 369',
+    title: 'Computational Media Systems',
+    credits: '3',
+    gradeMode: 'A-F only',
+    prerequisites: 'Any ICS 110 (Alpha), ICS 111, or ECE 160, or instructor approval',
+    description:
+      'Intermediate object-oriented programming within the context of interactive media systems and video game development. Topics: classes, objects, inheritance, polymorphism, abstract classes, interfaces, event-driven programming, vectors, geometric primitives, game mechanics, and relevant design patterns.',
+    notes:
+      'Restricted to EE, CENG, ICS, CM, CSCI, THEA, DNCE, THDN majors - Cross-listed: ECE 369',
+    closed: true,
+  },
+  {
+    code: 'ICS 481',
+    title: 'Introduction to Computer Graphics',
+    credits: '3',
+    prerequisites:
+      '(ICS 369 or ECE 369) and (MATH 307 or MATH 311); or consent',
+    description:
+      'Fundamentals of computer graphics including graphics hardware, representation, manipulation, and display of two- and three-dimensional objects, use of commercial software.',
+    closed: true,
+  },
+  {
+    code: 'ICS 482',
+    title: 'Topics in Computer Graphics',
+    credits: '3',
+    gradeMode: 'A-F only',
+    prerequisites: 'ICS 369',
+    description:
+      'Review of selected graphics literature, with a software development project based on a topic of interest.',
+    closed: true,
+  },
+  {
+    code: 'ICS 484',
+    title: 'Data Visualization',
+    credits: '3',
+    prerequisites: 'Any ICS 110 (Alpha), ICS 111, or CINE 215',
+    description:
+      'Introduction to data visualization through practical techniques for turning data into images to produce insight. Topics include: information visualization, geospatial visualization, scientific visualization, social network visualization, and medical visualization.',
+    notes:
+      'Junior standing or higher - Cross-listed: CINE 484, DATA 484',
+    closed: true,
+  },
+  {
+    code: 'ICS 486',
+    title: 'Virtual and Augmented Reality Programming',
+    credits: '3',
+    prerequisites: 'Any ICS 110 (Alpha), ICS 111, or CINE 215',
+    description:
+      'Students will learn to develop virtual reality and augmented reality applications with turnkey tools as well as through programming. Prior programming experience is not required for this course.',
+    notes: 'Cross-listed: CINE 419',
+    closed: true,
+  },
+  {
+    code: 'ICS 489',
+    title: 'Software Techniques for Computer Visual Effects',
+    credits: '3',
+    gradeMode: 'A-F only',
+    prerequisites: 'ICS 369',
+    description:
+      'Principles, techniques, and history of visual effects and underlying software techniques for computer visual effects. Project-based course involving the merging of computer generated imagery with live action footage.',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 101A',
+    title: 'Digital Tools for the Information World',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 102',
+    title: 'Introduction to Data Science',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 103',
+    title: 'Introduction to Computer Science Principles',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 104',
+    title: 'Introduction to Generative AI',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 110',
+    title: 'Introduction to Computer Programming',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 110C',
+    title: 'Introduction to Computer Programming: C',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 110D',
+    title: 'Introduction to Computer Programming: through animations',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 111A',
+    title: 'Introduction to Computer Science I',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 210',
+    title: 'Information Systems in Society',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 211A',
+    title: 'Introduction to Computer Science II',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 215',
+    title: 'Introduction to Scripting',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 222',
+    title: 'Basic Concepts of Computer Science',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 290',
+    title: 'Computer Science Careers: An Exploration of the Specialties of Computer Science',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 296',
+    title: 'Sophomore Project',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 331',
+    title: 'Logic Design and Microprocessors',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 351',
+    title: 'Network Design and Management',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 361',
+    title: 'Foundations of Artificial Intelligence',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 396',
+    title: 'Junior Project',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 415',
+    title: 'Introduction to Programming for the Web',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 419',
+    title: 'The Science, Psychology and Philosophy of Systems Design',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 421',
+    title: 'Database Systems II',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 422',
+    title: 'Network Science Methodology',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 423',
+    title: 'Data Security and Cryptography I',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 424',
+    title: 'Application Frameworks',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 427',
+    title: 'Programming Approaches to Software Quality Assurance',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 428',
+    title: 'Digital Forensics',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 429',
+    title: 'Blockchain and Cryptocurrencies',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 431',
+    title: 'Computer Architecture',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 432',
+    title: 'Concurrent and High-Performance Programming',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 438',
+    title: 'Big Data Analytics',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 441',
+    title: 'Theory of Computation',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 442',
+    title: 'Analytical Models and Methods',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 443',
+    title: 'Parallel Algorithms',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 444',
+    title: 'Security Science of Machine Learning and Natural Language Processing',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 451',
+    title: 'Data Networks',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 452',
+    title: 'Software Design for Robotics',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 455',
+    title: 'Security and Trust II: Information Assurance',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 461',
+    title: 'Artificial Intelligence',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 465',
+    title: 'Introduction to Hypermedia',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 466',
+    title: 'Design for Mobile Devices',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 471',
+    title: 'Probability, Statistics, and Queuing',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 475',
+    title: 'Introduction to Bioinformatics Sequences and Genomes Analysis',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 476',
+    title: 'Bioinformatics Algorithms and Tool Development',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 483',
+    title: 'Computer Vision',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 495',
+    title: 'Special Topics in Security',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 601',
+    title: 'Applied Computing Industry Seminar',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 602',
+    title: 'Practical Problem Solving with Algorithms',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 603',
+    title: 'Applied Computing Fundamentals',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 604',
+    title: 'Applied Data Science',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 605',
+    title: 'Applied Artificial Intelligence',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 606',
+    title: 'Intelligent Autonomous Agents',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 609',
+    title: 'Practicum / Internship',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 611',
+    title: 'Compiler Theory and Construction',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 612',
+    title: 'Theory of Operating Systems',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 613',
+    title: 'Advanced Software Engineering',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 614',
+    title: 'Medical Informatics I',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 615',
+    title: 'Software Quality and Maintenance',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 616',
+    title: 'Information Architecture and Web Design',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 622',
+    title: 'Network Science',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 624',
+    title: 'Advanced Data Management',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 632',
+    title: 'Principles of High Performance Computing',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 636',
+    title: 'Information Theory in Machine Learning',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 637',
+    title: 'Deep Learning with Neural Networks',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 639',
+    title: 'Human-Centered Artificial Intelligence',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 641',
+    title: 'Advanced Theory of Computation',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 643',
+    title: 'Advanced Parallel Algorithms',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 644',
+    title: 'Advanced Security Science of Machine Learning and Natural Language Processing',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 651',
+    title: 'Computer Networks',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 655',
+    title: 'Security and Trust III: Cyber Security and Commerce',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 660',
+    title: 'Computer Architecture I',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 661',
+    title: 'Advanced Artificial Intelligence',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 663',
+    title: 'Pattern Recognition',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 665',
+    title: 'User Interfaces and Hypermedia',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 667',
+    title: 'HCI Design Methods',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 669',
+    title: 'Social Computing',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 674',
+    title: 'Evolutionary Computation I: Survey of Methods',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 675',
+    title: 'Bioinformatics: Sequences Analysis',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 676',
+    title: 'Bioinformatics: Microarrays',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 681',
+    title: 'Computer Graphics',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 683',
+    title: 'Advanced Computer Vision',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 684',
+    title: 'Advanced Data Visualization',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 685',
+    title: 'Virtual and Augmented Reality',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 686',
+    title: 'Digital Video Information',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 690',
+    title: 'Seminar in ICS',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 691',
+    title: 'Topics in Computer Science',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 691C',
+    title: 'Topics in Computer Science: area 2',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 691D',
+    title: 'Topics in Computer Science: area 3',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 691G',
+    title: 'Topics in Computer Science: general',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 695',
+    title: 'Advanced Special Topics in Security',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 699',
+    title: 'Directed Reading/Research',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 700',
+    title: 'Thesis Research',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
+
+  {
+    code: 'ICS 800',
+    title: 'Dissertation Research',
+    credits: '—',
+    notes: 'Catalog entry - not offered in Spring 2027',
+    closed: true,
+  },
 ];
 
 /**
@@ -881,6 +1696,7 @@ export type SectionStatus = 'Open' | 'Waitlist' | 'Closed' | 'Full';
  *  'Closed' is reserved for sections closed to enrollment (no seat data
  *  produces it yet). */
 export const sectionStatus = (course: IcsCourse): SectionStatus => {
+  if (course.closed) return 'Closed';
   if (course.seatsOpen === undefined || course.seatsOpen > 0) return 'Open';
   return (course.waitlistOpen ?? 0) > 0 ? 'Waitlist' : 'Full';
 };
@@ -931,6 +1747,17 @@ export const courseStatus = (code: string): CourseStatus => {
   return courseNumber(code) >= 500 ? 'Graduate' : 'Undergraduate';
 };
 
+export interface PathwayRequirement {
+  /** Column heading shown above the list, e.g. "Core Courses". */
+  title: string;
+  /** Course codes listed with their catalog titles when available. */
+  courses?: string[];
+  /** Selection rule shown under the course list, e.g. "choose one". */
+  hint?: string;
+  /** Free-text requirement shown instead of a course list. */
+  text?: string;
+}
+
 export interface DegreePathway {
   key: string;
   label: string;
@@ -938,6 +1765,10 @@ export interface DegreePathway {
   courses: string[];
   /** One-line summary of the double-count rules shown when filter is active. */
   note: string;
+  /** Longer description of the degree track shown in the pathway card. */
+  description?: string;
+  /** Structured requirement groups rendered as columns in the pathway card. */
+  requirements?: PathwayRequirement[];
 }
 
 /** Courses every ICS degree pathway requires (BS/MS bulletin assumption). */
@@ -951,8 +1782,20 @@ const SHARED_PATHWAY_COURSES = [
   'ICS 314',
 ];
 
+const BA_CORE_COURSES = [
+  'ICS 111',
+  'ICS 141',
+  'ICS 211',
+  'ICS 212',
+  'ICS 241',
+  'ICS 311',
+  'ICS 314',
+  'ICS 321',
+  'ICS 332',
+];
+
 /**
- * BS/MS double-count pathways. Undergraduate group = pick one course;
+ * Degree pathways. Undergraduate group = pick one course;
  * graduate group = pick up to two. Minimum grade B (not B-) in all cases.
  * BAM students additionally take ICS 690 (1 cr) beyond BS requirements.
  */
@@ -980,6 +1823,29 @@ export const DEGREE_PATHWAYS: DegreePathway[] = [
       'ICS 451',
     ],
     note: 'BA ICS General Track: core ICS 111/141/211/212/241/311/314/321/332, plus one course in two of (312/331, 313/361, 351/451, 222+355). Also requires one 400-level+ ICS course and four 300-level+ concentration courses.',
+    description:
+      'The B.A. ICS General Track combines the ICS core sequence with an approved concentration in a second field. Students submit a short degree proposal describing their plan of study.',
+    requirements: [
+      { title: 'Core Courses', courses: BA_CORE_COURSES },
+      {
+        title: 'Required Options',
+        courses: [
+          'ICS 312',
+          'ICS 331',
+          'ICS 313',
+          'ICS 361',
+          'ICS 351',
+          'ICS 451',
+          'ICS 222',
+          'ICS 355',
+        ],
+        hint: 'One course in each pair: 312/331, 313/361, 351/451 — plus ICS 222 and ICS 355',
+      },
+      {
+        title: 'Concentration',
+        text: 'At least one ICS 400-level+ course and four 300-level+ concentration courses, which may come from any department (min. 12 credits).',
+      },
+    ],
   },
   {
     key: 'ba-ics-sec',
@@ -1007,6 +1873,36 @@ export const DEGREE_PATHWAYS: DegreePathway[] = [
       'ICS 495',
     ],
     note: 'BA ICS Security Science: core ICS 111/141/211/212(or 215)/241/311/314/321/332, plus ICS 222, ICS 355, and ICS 351(or 451). Four electives from ICS 423/425/426/428/455/495 (ECE 406 also allowed).',
+    description:
+      'The B.A. ICS Security Science track layers security and trust coursework on top of the ICS core, preparing students for security-focused careers or graduate study.',
+    requirements: [
+      {
+        title: 'Core Courses',
+        courses: [
+          'ICS 111',
+          'ICS 141',
+          'ICS 211',
+          'ICS 212',
+          'ICS 215',
+          'ICS 241',
+          'ICS 311',
+          'ICS 314',
+          'ICS 321',
+          'ICS 332',
+        ],
+        hint: 'ICS 212 or ICS 215',
+      },
+      {
+        title: 'Required',
+        courses: ['ICS 222', 'ICS 355', 'ICS 351', 'ICS 451'],
+        hint: 'ICS 351 or ICS 451',
+      },
+      {
+        title: 'Electives (pick 4)',
+        courses: ['ICS 423', 'ICS 425', 'ICS 426', 'ICS 428', 'ICS 455', 'ICS 495'],
+        hint: 'ECE 406 also allowed',
+      },
+    ],
   },
   {
     key: 'ba-ics-ccm',
@@ -1033,6 +1929,44 @@ export const DEGREE_PATHWAYS: DegreePathway[] = [
       'ICS 496',
     ],
     note: 'BA ICS Creative Computational Media: ICS core 111/211/212/235(Fall only)/311/314/321/355/369/481/487 plus ICS 110D animations (excluded - shares number with ICS 110P) and MATH 301/307/372; electives from 464/482/484/485/486/488/489/496.',
+    description:
+      'The B.A. ICS Creative Computational Media track blends the ICS core with electives in computer graphics, games, and digital content creation.',
+    requirements: [
+      {
+        title: 'Core Courses',
+        courses: [
+          'ICS 111',
+          'ICS 211',
+          'ICS 212',
+          'ICS 235',
+          'ICS 311',
+          'ICS 314',
+          'ICS 321',
+          'ICS 355',
+          'ICS 369',
+          'ICS 481',
+          'ICS 487',
+        ],
+        hint: 'ICS 235 is offered Fall only',
+      },
+      {
+        title: 'Electives',
+        courses: [
+          'ICS 464',
+          'ICS 482',
+          'ICS 484',
+          'ICS 485',
+          'ICS 486',
+          'ICS 488',
+          'ICS 489',
+          'ICS 496',
+        ],
+      },
+      {
+        title: 'Related Courses',
+        text: 'MATH 215/241/251A, MATH 216/242/252A, MATH 301, MATH 307 or 311, and MATH 372 are also required (outside the ICS catalog).',
+      },
+    ],
   },
   {
     key: 'bs-ms-cs',
@@ -1050,6 +1984,20 @@ export const DEGREE_PATHWAYS: DegreePathway[] = [
       'ICS 691',
     ],
     note: 'Double-count: one of ICS 414/435/451/466, plus up to two of ICS 613/621/632/664/691. Min grade B (not B-). BAM students add ICS 690 (1 cr).',
+    description:
+      'Double-count pathway: approved courses count toward both the B.S. and M.S. in Computer Science. Minimum grade of B (not B-) is required in all double-counted courses.',
+    requirements: [
+      { title: 'Shared Core', courses: SHARED_PATHWAY_COURSES },
+      {
+        title: 'Undergraduate Pick (1)',
+        courses: ['ICS 414', 'ICS 435', 'ICS 451', 'ICS 466'],
+      },
+      {
+        title: 'Graduate Picks (up to 2)',
+        courses: ['ICS 613', 'ICS 621', 'ICS 632', 'ICS 664', 'ICS 691'],
+        hint: 'BAM students also take ICS 690 (1 cr)',
+      },
+    ],
   },
   {
     key: 'bs-ms-cs-ds',
@@ -1067,6 +2015,20 @@ export const DEGREE_PATHWAYS: DegreePathway[] = [
       'ICS 691',
     ],
     note: 'Double-count: one of ICS 451/466/483/491, plus up to two of ICS 613/621/622/664/691. Min grade B (not B-). BAM students add ICS 690 (1 cr).',
+    description:
+      'Double-count pathway for the CS/Data Science B.S.: approved courses count toward both degrees. Minimum grade of B (not B-) is required in all double-counted courses.',
+    requirements: [
+      { title: 'Shared Core', courses: SHARED_PATHWAY_COURSES },
+      {
+        title: 'Undergraduate Pick (1)',
+        courses: ['ICS 451', 'ICS 466', 'ICS 483', 'ICS 491'],
+      },
+      {
+        title: 'Graduate Picks (up to 2)',
+        courses: ['ICS 613', 'ICS 621', 'ICS 622', 'ICS 664', 'ICS 691'],
+        hint: 'BAM students also take ICS 690 (1 cr)',
+      },
+    ],
   },
   {
     key: 'bs-ms-cs-sec',
@@ -1083,5 +2045,19 @@ export const DEGREE_PATHWAYS: DegreePathway[] = [
       'ICS 691',
     ],
     note: 'Double-count: one of ICS 423/426/455/495, plus up to two of ICS 621/623/655/691. Min grade B (not B-). BAM students add ICS 690 (1 cr).',
+    description:
+      'Double-count pathway for the CS/Security Science B.S.: approved courses count toward both degrees. Minimum grade of B (not B-) is required in all double-counted courses.',
+    requirements: [
+      { title: 'Shared Core', courses: SHARED_PATHWAY_COURSES },
+      {
+        title: 'Undergraduate Pick (1)',
+        courses: ['ICS 423', 'ICS 426', 'ICS 455', 'ICS 495'],
+      },
+      {
+        title: 'Graduate Picks (up to 2)',
+        courses: ['ICS 621', 'ICS 623', 'ICS 655', 'ICS 691'],
+        hint: 'BAM students also take ICS 690 (1 cr)',
+      },
+    ],
   },
 ];

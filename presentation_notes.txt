@@ -1,0 +1,162 @@
+================================================================================
+EBICSA COURSE BROWSER - PRESENTATION NOTES
+================================================================================
+
+--------------------------------------------------------------------------------
+PART 1: 3-5 MINUTE TALK TRACK
+--------------------------------------------------------------------------------
+
+What it is:
+  The EBICSA course browser is a web app for browsing University of Hawaii at
+  Manoa Information and Computer Sciences (ICS) course offerings. It displays
+  the complete Spring 2027 ICS schedule - 57 course sections across 38 unique
+  course codes - pulled from UH Manoa's Star GPS registration system. Students
+  and advisors can search, filter, sort, and compare sections by schedule,
+  faculty, location, participation mode (in-person/hybrid/online), academic
+  status, and enrollment status.
+
+Tech stack:
+  Next.js 16 with the App Router and Turbopack, React 19, and TypeScript.
+  Styling uses React-Bootstrap on top of Bootstrap 5. The project template
+  also includes Prisma 7 with PostgreSQL and NextAuth for user accounts -
+  though the course catalog itself is served from a static, typed TypeScript
+  data module, which keeps page loads instant and requires no API calls.
+
+How the data works:
+  Everything lives in src/data/icsCourses.ts. Each Star GPS CRN section is a
+  separate record, so the same course code appears multiple times when it has
+  different meeting times - that's intentional, since students need to pick a
+  specific section. The file also encodes derived helpers: schedule strings
+  are parsed into day/time/location/online patterns, times are converted to
+  24-hour format, buildings are extracted into their own column, and course
+  status is classified as Core, Undergraduate, Graduate, or Noncredit.
+  Enrollment status follows a seats-open/waitlist rule. Degree pathways -
+  three B.A. ICS tracks plus three B.S./M.S. double-count routes - are
+  declared as structured data with descriptions and requirement lists.
+
+User experience work:
+  Filtering is fully live with a deferred search so typing never lags.
+  Results can be sorted by clicking column headers, active filters appear
+  as dismissible chips, table headers stay sticky while scrolling, and each
+  row expands to show the full course description. On mobile the table is
+  replaced by compact cards, and a print stylesheet produces a clean
+  paper-friendly list. A pathway card explains each degree track's core,
+  elective, and concentration requirements when a pathway filter is
+  selected.
+
+Performance:
+  The render pipeline is memoized end to end - filtered, sorted, and paged
+  results are computed in useMemo hooks, rows are React.memo components,
+  schedule parsing is cached in a Map since many sections share identical
+  schedule strings, and search uses React's useDeferredValue.
+
+AI integration:
+  This project was built iteratively with Devin, an AI software-engineering
+  agent. Every feature - the data import, schedule parser, pathway engine,
+  and the UX batch - was implemented through natural-language requests,
+  with the agent handling code changes, lint verification, and debugging.
+  There is no runtime AI in the app itself today, but the architecture
+  (typed static data + client-side filtering) is well suited to future AI
+  features like a natural-language course assistant.
+
+Close:
+  The result is a fast, accessible, mobile-friendly catalog that turns raw
+  registration data into something a student can actually plan a semester
+  with.
+
+--------------------------------------------------------------------------------
+PART 2: ANTICIPATED QUESTIONS AND ANSWERS
+--------------------------------------------------------------------------------
+
+Q: Why is the course data a static TypeScript file instead of the database?
+A: The Prisma/PostgreSQL setup exists for user accounts (NextAuth), not for
+   the catalog. A static typed module means zero API latency, full type
+   safety, and trivial deploys - the whole catalog ships in the JS bundle.
+   If the catalog needs to update mid-semester or support user-generated
+   data, migrating to Postgres via Prisma would be straightforward.
+
+Q: How do you handle duplicate course codes?
+A: Each CRN section is a separate record - ICS 101 appears 8 times because
+   it has 8 different meeting patterns. React keys use CRN (falling back to
+   code) so duplicates don't collide. This preserves the real registration
+   choice students face.
+
+Q: How does the pathway filter work?
+A: Pathways are declared as course-code lists in DEGREE_PATHWAYS. Matching
+   uses courseNumber(), which strips letter suffixes, so 'ICS 691' matches
+   both ICS 691B and 691E sections. When a pathway is active, all 400-level
+   courses are also included because every degree needs upper-division
+   courses to graduate. Selecting a pathway also renders an explanatory
+   card with core/elective/concentration requirements.
+
+Q: How is enrollment status determined?
+A: sectionStatus() implements the rule: seatsOpen > 0 or unknown means Open;
+   seatsOpen == 0 means Waitlist if the waitlist has space, else Full.
+   Honest caveat: seat counts aren't populated for most sections yet, so
+   nearly everything shows Open and only ICS 692 shows Waitlist. The
+   mechanism is ready for real Star GPS seat data.
+
+Q: What performance techniques did you use?
+A: useMemo for the filter/sort/paginate pipeline, React.memo on row and
+   card components, a module-level Map cache for schedule parsing (many
+   sections share identical schedule strings), useDeferredValue on search
+   input, and hoisted style constants. In dev mode Turbopack/HMR adds
+   overhead; a production build is faster still.
+
+Q: How does it work on mobile?
+A: Below the md breakpoint the 8-column table is hidden and replaced by
+   CourseCard components - compact stacked cards with code, CRN, status
+   badge, title, schedule, and a one-line metadata summary. The filter
+   controls collapse to a single column.
+
+Q: What accessibility considerations exist?
+A: Sortable headers are keyboard-focusable buttons with aria-labels
+   describing sort state; detail toggles expose aria-expanded; filter
+   chips are dismissible via click or Enter/Space; the "/" shortcut
+   focuses search; decorative glyphs are aria-hidden.
+
+Q: How accurate is the data?
+A: Course sections, schedules, faculty, prerequisites, and descriptions
+   were transcribed from Star GPS for Spring 2027. Known gaps: seat and
+   waitlist counts are mostly absent, a few degree requirements outside
+   the ICS catalog (MATH courses, ECE 406, ICS 110D) are documented but
+   not matchable, and the catalog is ICS-only.
+
+Q: Why a client component for the whole page?
+A: Everything on /courses is interactive - live filtering, sorting,
+   expanding rows - so 'use client' is appropriate. The data is static so
+   there's no server round-trip anyway. Trade-off: it's not server-rendered
+   for SEO, which is acceptable for an authenticated-style internal tool.
+
+Q: What testing exists?
+A: The template includes Playwright with a tests/ directory and config.
+   Verification during development has been ESLint plus HTTP 200 checks
+   on /courses; dedicated UI tests haven't been written yet.
+
+Q: What would you improve next?
+A: URL-synced filters (shareable/bookmarkable views), course-section
+   grouping to reduce row noise, real seat/waitlist counts from Star GPS,
+   localStorage filter persistence, and possibly a natural-language
+   assistant powered by an LLM API.
+
+Q: How was this built?
+A: Iteratively with Devin, an AI software agent. Features were requested
+   in natural language and implemented with verification (lint, HTTP
+   checks) after each change. Human direction shaped every design
+   decision - column order, colors, layout, and requirements all came
+   from user feedback across the session.
+
+Q: Is any user data stored?
+A: No. The catalog is read-only static data; the only persisted state is
+   what the auth template stores for accounts (credentials in Postgres via
+   Prisma). Filters live in React state only.
+
+Q: How would this scale?
+A: Client-side filtering handles hundreds of sections trivially. If the
+   catalog grew to thousands of courses across departments, we'd add
+   server-side search/filtering or pagination at the data layer - the
+   current architecture wouldn't need to change shape.
+
+================================================================================
+END OF NOTES
+================================================================================

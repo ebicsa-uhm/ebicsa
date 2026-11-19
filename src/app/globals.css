@@ -40,3 +40,42 @@ body {
   color: var(--bs-secondary-color);
   background: transparent;
 }
+
+/* Sticky table header while scrolling the course list. */
+.course-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background-color: var(--bs-body-bg);
+  box-shadow: 0 1px 0 var(--bs-border-color-translucent);
+}
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Print: show the full table with all detail rows, hide interactive UI. */
+@media print {
+  nav,
+  .no-print {
+    display: none !important;
+  }
+  .course-table {
+    display: table !important;
+  }
+  .course-cards {
+    display: none !important;
+  }
+  .course-detail {
+    display: table-row !important;
+  }
+}
+
+/* Pathway summary card shown when a degree-pathway filter is active. */
+.pathway-card {
+  border-color: var(--bs-border-color-translucent);
+}
+.pathway-card .card-title {
+  color: var(--bs-primary);
+}
