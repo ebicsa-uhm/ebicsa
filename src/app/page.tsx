@@ -21,7 +21,7 @@ const features = [
     description: `Set your credits, days, and time window.
                   EBICSA shows weekly schedules with no
                   time conflicts.`,
-    linkText: 'Build a scedule',
+    linkText: 'Build a schedule',
     href: '/',
   },
   {
