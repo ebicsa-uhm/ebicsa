@@ -22,7 +22,7 @@ const NavBar: React.FC = () => {
               <>
                  {/* Navbar Items, link later  */}
                 <Nav.Link id="add-stuff-nav" href="/courses" active={pathName === '/courses'}>
-                  Course Search
+                  Courses
                 </Nav.Link>
                 <Nav.Link id="list-stuff-nav" href="/schedule-builder-nav" active={pathName === '/schedule-builder-nav'}>
                   Schedule Builder
