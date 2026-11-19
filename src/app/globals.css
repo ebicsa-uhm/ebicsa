@@ -169,3 +169,92 @@ body {
 .card a.card-link:hover {
   text-decoration: underline;
 }
+/* ---------- Auth page ---------- */
+.auth-page {
+  background: #f4f3ee;
+  min-height: 100vh;
+  padding: 3rem 0;
+}
+
+.auth-card {
+  border-radius: 24px;
+  overflow: hidden; /* clips the image to the rounded corners */
+  min-height: 760px;
+}
+
+.auth-image {
+  background:
+    linear-gradient(rgba(2, 71, 49, 0.55), rgba(2, 71, 49, 0.55)),
+    url('/uh-manoa-campus-center.jpg') center / cover no-repeat;
+  align-items: flex-end; /* pushes text to the bottom */
+  min-height: 760px;
+}
+
+.auth-image-text {
+  color: white;
+  padding: 2.5rem;
+}
+
+/* right side */
+.auth-form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+}
+
+.auth-form {
+  width: 100%;
+  max-width: 470px;
+  padding: 2rem;
+}
+
+.auth-tabs {
+  display: inline-flex;
+  background: #efeee9;
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 2rem;
+}
+
+.auth-tab {
+  padding: 0.5rem 2rem;
+  border-radius: 999px;
+  color: #024731;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth-tab.active {
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.auth-title {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.auth-form .form-control {
+  padding: 0.65rem 1rem;
+  border-radius: 14px;
+  border-color: #c9ccbf;
+}
+
+.auth-form .form-control:focus {
+  border-color: #024731;
+  box-shadow: 0 0 0 0.2rem rgba(2, 71, 49, 0.15);
+}
+
+.auth-submit {
+  background: #024731 !important;
+  border-color: #024731 !important;
+  border-radius: 999px;
+  padding: 0.65rem;
+  font-weight: 600;
+}
+
+.auth-link {
+  color: #024731;
+  font-weight: 600;
+}
