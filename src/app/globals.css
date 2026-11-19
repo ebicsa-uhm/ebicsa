@@ -170,16 +170,22 @@ body {
   text-decoration: underline;
 }
 /* ---------- signin page ---------- */
-.signin-page {
+.signin-page .container {
+  display: flex;
+  justify-content: center;
   background: #f4f3ee;
   min-height: 100vh;
   padding: 3rem 0;
+  align-items: center;
+  justify-content: center;
 }
 
 .signin-card {
+  width: 100%;
   border-radius: 24px;
   overflow: hidden; /* clips the image to the rounded corners */
   min-height: 760px;
+  max-width: 1100px;
 }
 
 .signin-image {

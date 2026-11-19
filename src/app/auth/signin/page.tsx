@@ -41,8 +41,8 @@ const SignIn = () => {
               <div className="signin-form">
                 {/* the pill that switches n stuff */}
                 <div className="signin-tabs">
-                  <a href="/signin/signin" className="signin-tab active">Sign in</a>
-                  <a href="/signin/signup" className="signin-tab">Sign up</a>
+                  <a href="/auth/signin" className="signin-tab active">Sign in</a>
+                  <a href="/auth/signup" className="signin-tab">Sign up</a>
                 </div>
 
                 <h1 className="signin-title">Welcome back</h1>
@@ -79,7 +79,7 @@ const SignIn = () => {
 
                 <p className="text-center mt-3 subText1">
                   New to EBICSA?{' '}
-                  <a href="/signin/signup" className="signin-link">Create an account</a>
+                  <a href="/auth/signup" className="signin-link">Create an account</a>
                 </p>
               </div>
             </Col>
