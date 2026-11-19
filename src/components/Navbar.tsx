@@ -24,10 +24,10 @@ const NavBar: React.FC = () => {
                 <Nav.Link id="add-stuff-nav" href="/courses" active={pathName === '/courses'}>
                   Course Search
                 </Nav.Link>
-                <Nav.Link id="list-stuff-nav" href="/schedule_builder" active={pathName === '/schedule_builder'}>
+                <Nav.Link id="list-stuff-nav" href="/schedule-builder-nav" active={pathName === '/schedule-builder-nav'}>
                   Schedule Builder
                 </Nav.Link>
-                <Nav.Link id="list-stuff-nav" href="/my_schedules" active={pathName === '/my_schedules'}>
+                <Nav.Link id="list-stuff-nav" href="/my-schedules" active={pathName === '/my-schedules'}>
                   My Schedules
                 </Nav.Link>
                 <Nav.Link id="list-stuff-nav" href="/degree_pathways" active={pathName === '/degree_pathways'}>
