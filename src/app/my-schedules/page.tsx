@@ -1,38 +1,46 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
+import type { CSSProperties } from 'react';
+import {
+  emptyScheduleSnapshot,
+  parseSchedules,
+  readScheduleSnapshot,
+  subscribeToSchedules,
+  updateSavedSchedules,
+} from '../../lib/saved-schedules';
+import type { SavedCourse, SavedSchedule } from '../../lib/saved-schedules';
 import styles from './my-schedules.module.css';
 
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] as const;
-const gridStart = 8 * 60;
-const gridEnd = 16 * 60;
-const hours = Array.from({ length: 8 }, (_, index) => gridStart + index * 60);
 
-type Course = {
+type SampleCourse = {
   code: string;
   credits: number;
-  days: readonly (typeof days)[number][];
+  days: string[];
   start: number;
   end: number;
 };
 
-type Schedule = {
-  id: string;
-  name: string;
-  bookmarked: boolean;
-  courses: Course[];
-};
-
-const sampleCourses: Course[] = [
+const sampleCourses: SampleCourse[] = [
   { code: 'ICS 311', credits: 3, days: ['Mon', 'Wed'], start: 540, end: 615 },
   { code: 'ICS 332', credits: 3, days: ['Mon', 'Wed'], start: 630, end: 705 },
   { code: 'MATH 242', credits: 4, days: ['Mon', 'Wed'], start: 780, end: 855 },
   { code: 'ICS 314', credits: 3, days: ['Mon', 'Wed'], start: 870, end: 945 },
 ];
 
-const sampleSchedules: Schedule[] = [
-  { id: 'fewer-days', name: 'Fewer campus days', bookmarked: true, courses: sampleCourses },
+function asSampleCourse({ code, credits, days: meetingDays, start, end }: SampleCourse): SavedCourse {
+  return { code, crn: '', credits, meetings: [{ days: meetingDays, start, end }] };
+}
+
+const sampleSchedules: SavedSchedule[] = [
+  {
+    id: 'fewer-days',
+    name: 'Fewer campus days',
+    bookmarked: true,
+    courses: sampleCourses.map(asSampleCourse),
+  },
   {
     id: 'later-starts',
     name: 'Later starts',
@@ -42,7 +50,7 @@ const sampleSchedules: Schedule[] = [
       { ...sampleCourses[1], days: ['Tue', 'Thu'], start: 750, end: 825 },
       sampleCourses[2],
       sampleCourses[3],
-    ],
+    ].map(asSampleCourse),
   },
   {
     id: 'compact',
@@ -53,7 +61,7 @@ const sampleSchedules: Schedule[] = [
       sampleCourses[1],
       { ...sampleCourses[2], days: ['Tue', 'Thu'], start: 540, end: 615 },
       { ...sampleCourses[3], days: ['Tue', 'Thu'], start: 630, end: 705 },
-    ],
+    ].map(asSampleCourse),
   },
 ];
 
@@ -63,39 +71,80 @@ function formatTime(minutes: number) {
   return `${hour % 12 || 12}:${minute} ${hour < 12 ? 'AM' : 'PM'}`;
 }
 
-function getScheduleSummary(schedule: Schedule) {
+function getScheduleSummary(schedule: SavedSchedule) {
   const credits = schedule.courses.reduce((total, course) => total + course.credits, 0);
-  const campusDays = new Set(schedule.courses.flatMap((course) => course.days)).size;
-  return `${credits} credits · ${campusDays} campus days`;
+  return `${credits} credits`;
 }
 
 export default function MySchedulesPage() {
-  const [schedules, setSchedules] = useState(sampleSchedules);
-  const [selectedId, setSelectedId] = useState(sampleSchedules[0].id);
+  const snapshot = useSyncExternalStore(
+    subscribeToSchedules,
+    readScheduleSnapshot,
+    emptyScheduleSnapshot,
+  );
+  const [selectedId, setSelectedId] = useState('');
   const [bookmarkedOnly, setBookmarkedOnly] = useState(false);
   const [showComparison, setShowComparison] = useState(false);
+  const [rename, setRename] = useState<{ id: string; name: string } | null>(null);
+  const [error, setError] = useState('');
+
+  let schedules: SavedSchedule[] = [];
+  let loadError = '';
+
+  try {
+    schedules = parseSchedules(snapshot) ?? sampleSchedules;
+  } catch {
+    loadError = 'Could not read your saved schedules.';
+  }
 
   const visibleSchedules = schedules.filter((schedule) => !bookmarkedOnly || schedule.bookmarked);
   const selected = visibleSchedules.find((schedule) => schedule.id === selectedId)
     ?? visibleSchedules[0];
 
+  const meetings = selected?.courses.flatMap((course) => course.meetings.map((meeting) => ({
+    ...meeting,
+    code: course.code,
+    crn: course.crn,
+  }))) ?? [];
+
+  const gridStart = Math.min(8, ...meetings.map((meeting) => Math.floor(meeting.start / 60))) * 60;
+  const gridEnd = Math.max(16, ...meetings.map((meeting) => Math.ceil(meeting.end / 60))) * 60;
+  const hours = Array.from(
+    { length: (gridEnd - gridStart) / 60 },
+    (_, index) => gridStart + index * 60,
+  );
+
+  function saveChanges(update: (current: SavedSchedule[]) => SavedSchedule[]) {
+    try {
+      updateSavedSchedules(update, sampleSchedules);
+      setError('');
+      return true;
+    } catch {
+      setError('Could not update your saved schedules. Your changes were not saved.');
+      return false;
+    }
+  }
+
   function toggleBookmark(id: string) {
-    setSchedules((current) => current.map((schedule) => (
+    saveChanges((current) => current.map((schedule) => (
       schedule.id === id ? { ...schedule, bookmarked: !schedule.bookmarked } : schedule
     )));
   }
 
-  function renameSchedule(schedule: Schedule) {
-    const name = window.prompt('Schedule name', schedule.name)?.trim();
+  function renameSchedule() {
+    if (!rename) return;
+    const name = rename.name.trim();
     if (!name) return;
 
-    setSchedules((current) => current.map((item) => (
-      item.id === schedule.id ? { ...item, name } : item
+    const saved = saveChanges((current) => current.map((schedule) => (
+      schedule.id === rename.id ? { ...schedule, name } : schedule
     )));
+
+    if (saved) setRename(null);
   }
 
   function moveSchedule(id: string, offset: number) {
-    setSchedules((current) => {
+    saveChanges((current) => {
       const index = current.findIndex((schedule) => schedule.id === id);
       const target = index + offset;
       if (index < 0 || target < 0 || target >= current.length) return current;
@@ -107,9 +156,10 @@ export default function MySchedulesPage() {
     });
   }
 
-  function deleteSchedule(schedule: Schedule) {
+  function deleteSchedule(schedule: SavedSchedule) {
     if (!window.confirm(`Delete "${schedule.name}"?`)) return;
-    setSchedules((current) => current.filter((item) => item.id !== schedule.id));
+    const saved = saveChanges((current) => current.filter((item) => item.id !== schedule.id));
+    if (saved && rename?.id === schedule.id) setRename(null);
   }
 
   return (
@@ -117,7 +167,6 @@ export default function MySchedulesPage() {
       <header className={styles.titleBar}>
         <span><Link href="/">Home</Link> / My Schedules</span>
         <h1>My Schedules</h1>
-        <span>Spring 2027 sample data</span>
       </header>
 
       <section className={styles.toolbar} aria-label="Schedule filters">
@@ -139,8 +188,14 @@ export default function MySchedulesPage() {
       <div className={styles.panels}>
         <section className={styles.card}>
           <h2>Saved schedules</h2>
+          {(loadError || error) && <p role="alert">{loadError || error}</p>}
+
           {visibleSchedules.length === 0 && (
-            <p>{bookmarkedOnly ? 'No bookmarked schedules.' : 'No saved schedules.'}</p>
+            <p>
+              {bookmarkedOnly
+                ? 'No bookmarked schedules.'
+                : 'Save a schedule from Schedule Builder to see it here.'}
+            </p>
           )}
 
           <ul className={styles.savedList}>
@@ -157,6 +212,7 @@ export default function MySchedulesPage() {
                   >
                     {schedule.name}
                   </button>
+
                   <button
                     type="button"
                     aria-label={`Bookmark ${schedule.name}`}
@@ -172,11 +228,24 @@ export default function MySchedulesPage() {
                       />
                     </svg>
                   </button>
+
                   <details className={styles.actions}>
                     <summary aria-label={`Actions for ${schedule.name}`}>⋯</summary>
                     <div>
-                      <button type="button" onClick={() => renameSchedule(schedule)}>Rename</button>
-                      <button type="button" disabled={position === 0} onClick={() => moveSchedule(schedule.id, -1)}>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.currentTarget.closest('details')?.removeAttribute('open');
+                          setRename({ id: schedule.id, name: schedule.name });
+                        }}
+                      >
+                        Rename
+                      </button>
+                      <button
+                        type="button"
+                        disabled={position === 0}
+                        onClick={() => moveSchedule(schedule.id, -1)}
+                      >
                         Move up
                       </button>
                       <button
@@ -186,13 +255,46 @@ export default function MySchedulesPage() {
                       >
                         Move down
                       </button>
-                      <button type="button" onClick={() => deleteSchedule(schedule)}>Delete schedule</button>
+                      <button type="button" onClick={() => deleteSchedule(schedule)}>
+                        Delete schedule
+                      </button>
                     </div>
                   </details>
                 </li>
               );
             })}
           </ul>
+
+          {rename && (
+            <form
+              className="mb-3"
+              onSubmit={(event) => {
+                event.preventDefault();
+                renameSchedule();
+              }}
+            >
+              <label htmlFor="schedule-name" className="form-label">Schedule name</label>
+              <input
+                key={rename.id}
+                id="schedule-name"
+                className="form-control"
+                value={rename.name}
+                onFocus={(event) => event.currentTarget.select()}
+                onChange={(event) => setRename({ ...rename, name: event.target.value })}
+                autoFocus
+                required
+                maxLength={80}
+              />
+              <div className="d-flex gap-2 mt-2">
+                <button type="submit" className="btn btn-success btn-sm" disabled={!rename.name.trim()}>
+                  Save name
+                </button>
+                <button type="button" className="btn btn-outline-secondary btn-sm" onClick={() => setRename(null)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          )}
 
           <button
             type="button"
@@ -203,6 +305,7 @@ export default function MySchedulesPage() {
           >
             {showComparison ? 'Hide comparison' : 'Compare schedules'}
           </button>
+
           {showComparison && visibleSchedules.length >= 2 && (
             <ul>
               {visibleSchedules.map((schedule) => (
@@ -216,31 +319,35 @@ export default function MySchedulesPage() {
           {selected ? (
             <>
               <h2>{selected.name}</h2>
-              <p className={styles.meta}>{getScheduleSummary(selected)}</p>
+              <p className={styles.meta}>
+                {getScheduleSummary(selected)}
+                {sampleSchedules.some((schedule) => schedule.id === selected.id) && ' · Sample schedule'}
+              </p>
 
               <div className={styles.calendarScroll}>
-                <div className={styles.calendar}>
+                <div className={styles.calendar} style={{ '--hours': hours.length } as CSSProperties}>
                   <div className={styles.calendarColumn}>
                     <strong>Time</strong>
                     <div className={styles.calendarBody}>
                       {hours.map((hour) => <span key={hour}>{formatTime(hour)}</span>)}
                     </div>
                   </div>
+
                   {days.map((day) => (
                     <div className={styles.calendarColumn} key={day}>
                       <strong>{day}</strong>
                       <div className={styles.calendarBody}>
-                        {selected.courses.filter((course) => course.days.includes(day)).map((course) => (
+                        {meetings.filter((meeting) => meeting.days.includes(day)).map((meeting) => (
                           <div
-                            key={course.code}
+                            key={`${meeting.code}-${meeting.crn}-${meeting.start}`}
                             className={styles.courseBlock}
                             style={{
-                              top: `${100 * (course.start - gridStart) / (gridEnd - gridStart)}%`,
-                              height: `${100 * (course.end - course.start) / (gridEnd - gridStart)}%`,
+                              top: `${100 * (meeting.start - gridStart) / (gridEnd - gridStart)}%`,
+                              height: `${100 * (meeting.end - meeting.start) / (gridEnd - gridStart)}%`,
                             }}
                           >
-                            <b>{course.code}</b>
-                            <small>{formatTime(course.start)} – {formatTime(course.end)}</small>
+                            <b>{meeting.code}</b>
+                            <small>{formatTime(meeting.start)} – {formatTime(meeting.end)}</small>
                           </div>
                         ))}
                       </div>
@@ -252,7 +359,11 @@ export default function MySchedulesPage() {
               <h3>Classes in this schedule</h3>
               <ul className={styles.courseList}>
                 {selected.courses.map((course) => (
-                  <li key={course.code}><b>{course.code}</b> · {course.credits} credits</li>
+                  <li key={course.crn || course.code}>
+                    <b>{course.code}</b> · {course.credits} credits
+                    {course.crn && ` · CRN ${course.crn}`}
+                    {course.schedule && <div>{course.schedule}</div>}
+                  </li>
                 ))}
               </ul>
             </>

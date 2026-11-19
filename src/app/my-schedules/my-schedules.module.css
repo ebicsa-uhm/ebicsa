@@ -106,10 +106,14 @@
 .calendarBody {
   position: relative;
   display: grid;
-  grid-template-rows: repeat(8, 1fr);
-  height: 20rem;
+  grid-template-rows: repeat(var(--hours), 1fr);
+  height: calc(var(--hours) * 2.5rem);
   background: repeating-linear-gradient(
-    to bottom, white 0, white calc(12.5% - 1px), var(--line) calc(12.5% - 1px), var(--line) 12.5%
+    to bottom,
+    white 0,
+    white calc(100% / var(--hours) - 1px),
+    var(--line) calc(100% / var(--hours) - 1px),
+    var(--line) calc(100% / var(--hours))
   );
 }
 
