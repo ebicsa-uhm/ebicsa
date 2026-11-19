@@ -11,13 +11,13 @@ const SignIn = () => {
       email: { value: string };
       password: { value: string };
     };
-    await signIn('credentials', {
-      callbackUrl: '/signin/page.tsx',
+  await signIn('credentials', {
+      callbackUrl: '/',
       email: target.email.value,
       password: target.password.value,
     });
   };
-
+  
   return (
     <main className="signin-page">
       <Container>
