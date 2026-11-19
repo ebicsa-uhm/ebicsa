@@ -11,44 +11,80 @@ const SignIn = () => {
       email: { value: string };
       password: { value: string };
     };
-    const email = target.email.value;
-    const password = target.password.value;
-    await signIn('credentials', {
+  await signIn('credentials', {
       callbackUrl: '/',
-      email,
-      password,
+      email: target.email.value,
+      password: target.password.value,
     });
   };
 
   return (
-    <main>
+    <main className="signin-page">
       <Container>
-        <Row className="justify-content-center">
-          <Col xs={5}>
-            <h1 className="text-center">Sign In</h1>
-            <Card>
-              <Card.Body>
+        <Card className="signin-card border-0">
+          <Row className="g-0">
+            {/* the left image thing */}
+            <Col md={6} className="signin-image d-none d-md-flex">
+              <div className="signin-image-text">
+                <div className="smallStuff1">EBICSA</div>
+                <h2 className="bigStuff1">
+                  Your ICS plan, <span className="bigStuff2">saved in one place.</span>
+                </h2>
+                <p className="smallStuff2">
+                  Sign in to keep your setup, saved schedules, and chat history.
+                </p>
+              </div>
+            </Col>
+
+            {/* the actual form itself */}
+            <Col md={6} className="signin-form-side">
+              <div className="signin-form">
+                {/* the pill that switches n stuff */}
+                <div className="signin-tabs">
+                  <a href="/auth/signin" className="signin-tab active">Sign in</a>
+                  <a href="/auth/signup" className="signin-tab">Sign up</a>
+                </div>
+
+                <h1 className="signin-title">Welcome back</h1>
+                <p className="subText1">Sign in with your UH email.</p>
+
                 <Form method="post" onSubmit={handleSubmit}>
-                  <Form.Group controlId="formBasicEmail">
-                    <Form.Label>Email</Form.Label>
-                    <input name="email" type="text" className="form-control" />
+                  <Form.Group controlId="formBasicEmail" className="mb-3">
+                    <Form.Label>UH email</Form.Label>
+                    <Form.Control
+                      name="email"
+                      type="text"
+                      placeholder="yourname@hawaii.edu"
+                    />
                   </Form.Group>
-                  <Form.Group>
-                    <Form.Label>Password</Form.Label>
-                    <input name="password" type="password" className="form-control" />
+
+                  <Form.Group controlId="formBasicPassword">
+                    <div className="d-flex justify-content-between">
+                      <Form.Label>Password</Form.Label>
+                      <a href="/signin/forgot-password" className="signin-link small">
+                        Forgot password?
+                      </a>
+                    </div>
+                    <Form.Control
+                      name="password"
+                      type="password"
+                      placeholder="Your password"
+                    />
                   </Form.Group>
-                  <Button type="submit" className="mt-3">
-                    Signin
+
+                  <Button type="submit" className="signin-submit mt-4 w-100">
+                    Sign in
                   </Button>
                 </Form>
-              </Card.Body>
-              <Card.Footer>
-                Don&apos;t have an account?
-                <a href="/auth/signup">Sign up</a>
-              </Card.Footer>
-            </Card>
-          </Col>
-        </Row>
+
+                <p className="text-center mt-3 subText1">
+                  New to EBICSA?{' '}
+                  <a href="/auth/signup" className="signin-link">Create an account</a>
+                </p>
+              </div>
+            </Col>
+          </Row>
+        </Card>
       </Container>
     </main>
   );

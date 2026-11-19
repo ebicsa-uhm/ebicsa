@@ -67,7 +67,7 @@ async function authenticateWithUI(
 
     // Navigate to login page
     await page.goto(`${BASE_URL}/auth/signin`);
-    await page.waitForLoadState('networkidle');
+    await page.waitForLoadState('domcontentloaded');
 
     // Fill in credentials with retry logic
     await fillFormWithRetry(page, [

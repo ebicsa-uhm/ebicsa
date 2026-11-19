@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:wght@400;600;700&family=Roboto:wght@400;500;700&display=swap');
+
 html,
 body {
   --bs-light-rgb: 236, 236, 236;
@@ -6,12 +8,259 @@ body {
   padding: 0;
   margin: 0;
 }
+
 .wrapper {
   box-sizing: border-box;
   min-height: 100%;
   display: flex;
   flex-direction: column;
 }
-.small {
-  font-size: 0.875em;
+
+.navbar {
+  background-color: #024731 !important;
+}
+
+/* ---------- Footer ---------- */
+.site-footer {
+  background: #1c1c1a;
+  color: #fff;
+  padding: 2rem 0;
+  font-size: 0.85rem;
+}
+
+.site-footer strong {
+  display: block;
+}
+
+.site-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.site-footer a {
+  color: #fff;
+  text-decoration: underline;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 991.98px) {
+  .feature-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .feature-grid,
+  .steps {
+    grid-template-columns: 1fr;
+  }
+
+  .how-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ---------- Hero ---------- */
+.heroText {
+  position: absolute;
+  top: 10rem;
+  left: 10%;
+  right: 10%;
+  color: white;
+  z-index: 2;
+}
+
+.smallStuff1 {
+  font-size: 12px;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.bigStuff1 {
+  font-size: clamp(32px, 5vw, 50px); /* shrinks on small screens */
+  font-weight: bold;
+  line-height: 1.2;
+  margin: 0 0 1rem;
+}
+
+.bigStuff2,
+.bigStuff3 {
+  font-family: 'IBM Plex Serif', serif;
+  font-weight: normal;
+}
+
+.smallStuff2 {
+  font-size: 15px;
+  font-family: 'Roboto', sans-serif;
+  margin-bottom: 1.5rem;
+}
+
+.heroButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+/* Solid white button, dark green text */
+.heroBtnFilled {
+  --bs-btn-bg: #ffffff;
+  --bs-btn-border-color: #ffffff;
+  --bs-btn-color: #024731;
+
+  --bs-btn-hover-bg: #e9f2ee;
+  --bs-btn-hover-border-color: #e9f2ee;
+  --bs-btn-hover-color: #024731;
+
+  --bs-btn-active-bg: #d5e6df;
+  --bs-btn-active-border-color: #d5e6df;
+  --bs-btn-active-color: #024731;
+
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Transparent button, white border and text */
+.heroBtnOutline {
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: #ffffff;
+  --bs-btn-color: #ffffff;
+
+  --bs-btn-hover-bg: rgba(255, 255, 255, 0.15);
+  --bs-btn-hover-border-color: #ffffff;
+  --bs-btn-hover-color: #ffffff;
+
+  --bs-btn-active-bg: rgba(255, 255, 255, 0.25);
+  --bs-btn-active-border-color: #ffffff;
+  --bs-btn-active-color: #ffffff;
+
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bigText1{
+  font-size: 45px;
+  font-weight: bold;
+}
+
+.subText1{
+  font-size: 15px;
+  color: rgb(100, 100, 100);
+}
+
+.icon-box {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background-color: #e3efe8;
+  color: #1f5c3f;
+}
+
+.card a.card-link {
+  color: #1f5c3f;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.card a.card-link:hover {
+  text-decoration: underline;
+}
+/* ---------- signin page ---------- */
+.signin-page .container {
+  display: flex;
+  justify-content: center;
+  background: #f4f3ee;
+  min-height: 100vh;
+  padding: 3rem 0;
+  align-items: center;
+  justify-content: center;
+}
+
+.signin-card {
+  width: 100%;
+  border-radius: 24px;
+  overflow: hidden; /* clips the image to the rounded corners */
+  min-height: 760px;
+  max-width: 1100px;
+}
+
+.signin-image {
+  background:
+    linear-gradient(rgba(2, 71, 49, 0.55), rgba(2, 71, 49, 0.55)),
+    url('/uh-manoa-campus-center.jpg') center / cover no-repeat;
+  align-items: flex-end; /* pushes text to the bottom */
+  min-height: 760px;
+}
+
+.signin-image-text {
+  color: white;
+  padding: 2.5rem;
+}
+
+/* right side */
+.signin-form-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+}
+
+.signin-form {
+  width: 100%;
+  max-width: 470px;
+  padding: 2rem;
+}
+
+.signin-tabs {
+  display: inline-flex;
+  background: #efeee9;
+  border-radius: 999px;
+  padding: 4px;
+  margin-bottom: 2rem;
+}
+
+.signin-tab {
+  padding: 0.5rem 2rem;
+  border-radius: 999px;
+  color: #024731;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signin-tab.active {
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.signin-title {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.signin-form .form-control {
+  padding: 0.65rem 1rem;
+  border-radius: 14px;
+  border-color: #c9ccbf;
+}
+
+.signin-form .form-control:focus {
+  border-color: #024731;
+  box-shadow: 0 0 0 0.2rem rgba(2, 71, 49, 0.15);
+}
+
+.signin-submit {
+  background: #024731 !important;
+  border-color: #024731 !important;
+  border-radius: 999px;
+  padding: 0.65rem;
+  font-weight: 600;
+}
+
+.signin-link {
+  color: #024731;
+  font-weight: 600;
 }
