@@ -19,13 +19,13 @@ const SignIn = () => {
   };
 
   return (
-    <main className="auth-page">
+    <main className="signin-page">
       <Container>
-        <Card className="auth-card border-0">
+        <Card className="signin-card border-0">
           <Row className="g-0">
             {/* the left image thing */}
-            <Col md={6} className="auth-image d-none d-md-flex">
-              <div className="auth-image-text">
+            <Col md={6} className="signin-image d-none d-md-flex">
+              <div className="signin-image-text">
                 <div className="smallStuff1">EBICSA</div>
                 <h2 className="bigStuff1">
                   Your ICS plan, <span className="bigStuff2">saved in one place.</span>
@@ -37,15 +37,15 @@ const SignIn = () => {
             </Col>
 
             {/* the actual form itself */}
-            <Col md={6} className="auth-form-side">
-              <div className="auth-form">
+            <Col md={6} className="signin-form-side">
+              <div className="signin-form">
                 {/* the pill that switches n stuff */}
-                <div className="auth-tabs">
-                  <a href="/auth/signin" className="auth-tab active">Sign in</a>
-                  <a href="/auth/signup" className="auth-tab">Sign up</a>
+                <div className="signin-tabs">
+                  <a href="/signin/signin" className="signin-tab active">Sign in</a>
+                  <a href="/signin/signup" className="signin-tab">Sign up</a>
                 </div>
 
-                <h1 className="auth-title">Welcome back</h1>
+                <h1 className="signin-title">Welcome back</h1>
                 <p className="subText1">Sign in with your UH email.</p>
 
                 <Form method="post" onSubmit={handleSubmit}>
@@ -61,7 +61,7 @@ const SignIn = () => {
                   <Form.Group controlId="formBasicPassword">
                     <div className="d-flex justify-content-between">
                       <Form.Label>Password</Form.Label>
-                      <a href="/auth/forgot-password" className="auth-link small">
+                      <a href="/signin/forgot-password" className="signin-link small">
                         Forgot password?
                       </a>
                     </div>
@@ -72,14 +72,14 @@ const SignIn = () => {
                     />
                   </Form.Group>
 
-                  <Button type="submit" className="auth-submit mt-4 w-100">
+                  <Button type="submit" className="signin-submit mt-4 w-100">
                     Sign in
                   </Button>
                 </Form>
 
                 <p className="text-center mt-3 subText1">
                   New to EBICSA?{' '}
-                  <a href="/auth/signup" className="auth-link">Create an account</a>
+                  <a href="/signin/signup" className="signin-link">Create an account</a>
                 </p>
               </div>
             </Col>
