@@ -2,34 +2,50 @@
 
 import { useSession } from 'next-auth/react'; // v5 compatible
 import { usePathname } from 'next/navigation';
-import { Badge, Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
+import { Container, Nav, Navbar, NavDropdown } from 'react-bootstrap';
 import { BoxArrowRight, Lock, PersonFill, PersonPlusFill } from 'react-bootstrap-icons';
-
-const UHM_GREEN = '#024731';
 
 const NavBar: React.FC = () => {
   const { data: session, status } = useSession();
   const pathName = usePathname();
   if (status === 'loading') return null;
   const currentUser = session?.user?.email;
+  const role = session?.user?.role;
   return (
-    <Navbar variant="dark" expand="lg" style={{ backgroundColor: UHM_GREEN }}>
+    <Navbar bg="dark" data-bs-theme="dark" expand="lg">
       <Container>
-        <Navbar.Brand href="/" className="d-flex flex-column">
-          <span className="fw-bold">EBICSA</span>
-          <small className="text-white-50">
-            Even Better ICS Academic Advising{' '}
-            <Badge style={{ backgroundColor: '#009A44' }} className="ms-1">
-              UH Mānoa
-            </Badge>
-          </small>
-        </Navbar.Brand>
+        <Navbar.Brand href="/">EBICSA</Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto justify-content-end">
-            <Nav.Link id="courses-nav" href="/courses" active={pathName === '/courses'}>
-              Courses
-            </Nav.Link>
+          <Nav className="ms-auto align-items-lg-center">
+            {currentUser && (
+              <>
+                 {/* Navbar Items, link later  */}
+                <Nav.Link id="add-stuff-nav" href="/course_search" active={pathName === '/course_search'}>
+                  Course Search
+                </Nav.Link>
+                <Nav.Link id="list-stuff-nav" href="/schedule_builder" active={pathName === '/schedule_builder'}>
+                  Schedule Builder
+                </Nav.Link>
+                <Nav.Link id="list-stuff-nav" href="/my_schedules" active={pathName === '/my_schedules'}>
+                  My Schedules
+                </Nav.Link>
+                <Nav.Link id="list-stuff-nav" href="/degree_pathways" active={pathName === '/degree_pathways'}>
+                  Degree Pathways
+                </Nav.Link>
+                <Nav.Link id="list-stuff-nav" href="/help" active={pathName === '/help'}>
+                  Help
+                </Nav.Link>
+              </>
+            )}
+            {/* For Admins */}
+            {currentUser && role === 'ADMIN' && (
+              <Nav.Link id="admin-stuff-nav" href="/admin" active={pathName === '/admin'}>
+                Admin
+              </Nav.Link>
+            )}
+          </Nav>
+          <Nav>
             {session ? (
               <NavDropdown id="login-dropdown" title={currentUser}>
                 <NavDropdown.Item id="login-dropdown-sign-out" href="/api/auth/signout">

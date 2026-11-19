@@ -25,6 +25,7 @@ import {
   type Participation,
   type SectionStatus,
 } from '@/data/icsCourses';
+import styles from './courses.module.css';
 
 const PARTICIPATION: ('Any' | Participation)[] = ['Any', 'In-Person', 'Hybrid', 'Online'];
 const STATUS_OPTIONS: ('Any' | SectionStatus)[] = [
@@ -184,7 +185,7 @@ const CourseRow = memo(function CourseRow({ course }: { course: IcsCourse }) {
         </td>
         <td className="text-nowrap">{courseParticipation(course)}</td>
       </tr>
-      <tr className={open ? 'course-detail' : 'course-detail d-none'}>
+      <tr className={open ? styles['course-detail'] : `${styles['course-detail']} d-none`}>
         <CourseDetail course={course} />
       </tr>
     </>
@@ -286,7 +287,7 @@ const SortableTh = ({
         : `Sort by ${label}`
     }
   >
-    <span className="sortable-th">
+    <span className={styles['sortable-th']}>
       {label}
       {activeKey === sortKey && <span aria-hidden="true"> {dir === 1 ? '▲' : '▼'}</span>}
     </span>
@@ -411,7 +412,7 @@ const CourseBrowser = () => {
         </Breadcrumb>
         <h1 className="text-center">Search ICS Courses</h1>
 
-        <div className="d-flex justify-content-center no-print">
+        <div className={`d-flex justify-content-center ${styles['no-print']}`}>
           <Form.Control
             id="course-search"
             type="search"
@@ -423,7 +424,7 @@ const CourseBrowser = () => {
           />
         </div>
 
-        <div className="row g-2 justify-content-center mb-2 no-print">
+        <div className={`row g-2 justify-content-center mb-2 ${styles['no-print']}`}>
           <div className="col-12 col-sm-6 col-lg-4">
             <Form.Select
               value={filters.participation}
@@ -476,7 +477,7 @@ const CourseBrowser = () => {
         </div>
 
         {activeChips.length > 0 && (
-          <div className="d-flex justify-content-center gap-1 mb-2 flex-wrap no-print">
+          <div className={`d-flex justify-content-center gap-1 mb-2 flex-wrap ${styles['no-print']}`}>
             {activeChips.map((chip) => (
               <Badge
                 key={chip.label}
@@ -499,13 +500,13 @@ const CourseBrowser = () => {
           </div>
         )}
 
-        <p className="text-muted small no-print">
+        <p className={`text-muted small ${styles['no-print']}`}>
           Showing {sorted.length} of {icsCourses.length} courses
           {pageCount > 1 && ` — page ${page} of ${pageCount}`}
         </p>
 
         {activePathway && (
-          <Card className="mb-3 pathway-card position-relative">
+          <Card className={`mb-3 ${styles['pathway-card']} position-relative`}>
             <Card.Body className="text-center py-2">
               <Card.Title as="h2" className="h5 mb-0">
                 {activePathway.label}
@@ -574,8 +575,8 @@ const CourseBrowser = () => {
         )}
 
         {pageCount > 1 && (
-          <div className="d-flex justify-content-end mb-3 no-print">
-            <Pagination size="sm" className="pagination-compact mb-0">
+          <div className={`d-flex justify-content-end mb-3 ${styles['no-print']}`}>
+            <Pagination size="sm" className={`${styles['pagination-compact']} mb-0`}>
               <Pagination.Prev
                 disabled={page <= 1}
                 onClick={() => setPage((p) => p - 1)}
@@ -600,7 +601,7 @@ const CourseBrowser = () => {
         <Table
           striped
           hover
-          className="course-table align-middle d-none d-md-table"
+          className={`${styles['course-table']} align-middle d-none d-md-table`}
         >
           <thead>
             <tr>
@@ -613,7 +614,7 @@ const CourseBrowser = () => {
               <SortableTh label="Faculty" sortKey="faculty" {...thProps} />
               <th>Location</th>
               <th>Prerequisites</th>
-              <SortableTh label="Meets" sortKey="meets" {...thProps} className="meets-col" />
+              <SortableTh label="Meets" sortKey="meets" {...thProps} className={styles['meets-col']} />
               <SortableTh label="Participation" sortKey="participation" {...thProps} />
             </tr>
           </thead>
@@ -624,7 +625,7 @@ const CourseBrowser = () => {
           </tbody>
         </Table>
 
-        <div className="course-cards d-md-none">
+        <div className={`${styles['course-cards']} d-md-none`}>
           {paged.map((c) => (
             <CourseCard key={c.crn ?? c.code} course={c} />
           ))}

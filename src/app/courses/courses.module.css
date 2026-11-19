@@ -1,0 +1,70 @@
+.course-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Compact, borderless pagination - plain numbers instead of boxed buttons. */
+.pagination-compact :global(.page-link) {
+  border: none;
+  background: transparent;
+  color: var(--bs-body-color);
+  padding: 0.1rem 0.35rem;
+  font-size: 0.8rem;
+}
+.pagination-compact :global(.page-item.active) :global(.page-link) {
+  background: transparent;
+  color: var(--bs-primary);
+  font-weight: 600;
+}
+.pagination-compact :global(.page-item.disabled) :global(.page-link) {
+  color: var(--bs-secondary-color);
+  background: transparent;
+}
+
+/* Sticky table header while scrolling the course list. */
+.course-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background-color: var(--bs-body-bg);
+  box-shadow: 0 1px 0 var(--bs-border-color-translucent);
+}
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* Print: show the full table with all detail rows, hide interactive UI. */
+@media print {
+  :global(nav),
+  .no-print {
+    display: none !important;
+  }
+  .course-table {
+    display: table !important;
+  }
+  .course-cards {
+    display: none !important;
+  }
+  .course-detail {
+    display: table-row !important;
+  }
+}
+
+/* Pathway summary card shown when a degree-pathway filter is active. */
+.pathway-card {
+  border-color: var(--bs-border-color-translucent);
+}
+.pathway-card :global(.card-title) {
+  color: var(--bs-primary);
+}
+
+/* Keep the Meets column wide enough for schedule bullets even on pages
+   dominated by closed catalog entries (whose cells are just "—"). */
+.course-table .meets-col {
+  min-width: 12rem;
+}
