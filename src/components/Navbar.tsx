@@ -30,19 +30,7 @@ const NavBar: React.FC = () => {
                 <Nav.Link id="list-stuff-nav" href="/my-schedules" active={pathName === '/my-schedules'}>
                   My Schedules
                 </Nav.Link>
-                <Nav.Link id="list-stuff-nav" href="/degree_pathways" active={pathName === '/degree_pathways'}>
-                  Degree Pathways
-                </Nav.Link>
-                <Nav.Link id="list-stuff-nav" href="/help" active={pathName === '/help'}>
-                  Help
-                </Nav.Link>
               </>
-            )}
-            {/* For Admins */}
-            {currentUser && role === 'ADMIN' && (
-              <Nav.Link id="admin-stuff-nav" href="/admin" active={pathName === '/admin'}>
-                Admin
-              </Nav.Link>
             )}
           </Nav>
           <Nav>
