@@ -17,9 +17,71 @@ enum Role {
   ADMIN
 }
 
-model User {
+model User { 
   id       Int    @id @default(autoincrement())
   email    String @unique
   password String
   role     Role   @default(USER)
+  name             String?           // NEW
+  major            String?           // NEW, e.g. "BS ICS"
+  expectedGrad     String?           // NEW, e.g. "Spring 2028"
+  schedules        SavedSchedule[]   // a user has many saved schedules
 }
+
+model Course {
+  id          Int       @id @default(autoincrement())
+  code        String    @unique // "ICS 311"
+  subject     String    // "ICS"
+  number      String    // "311" — String to allow "110P", "691B"
+  title       String
+  credits     String    // "3" — String allows ranges like "1–3"
+  description String?
+  gradeMode   String?   // "Letter Plus/Minus" shown in course browser
+  attributes  String?   // shown in course browser
+  notes       String?   // course-level notes, e.g. "Fall only - Cross-listed: DATA 235"
+  status      String    @default("Undergraduate") // Core | Undergraduate | Graduate | Noncredit
+  prereqText  String?   // display text, e.g. "ICS 211 (C or better)"
+  sections    Section[]
+
+
+  @@index([subject, number])
+}
+
+model Section {
+  id            Int       @id @default(autoincrement())
+  crn           String    @unique // "54558"
+  number        String    // "001"
+  participation String    @default("In-Person") // In-Person | Hybrid | Online
+  instructor    String?   // faculty column
+  closed        Boolean   @default(false)
+  notes         String?   // "Instructor approval required"
+  rating        String?   
+  course        Course    @relation(fields: [courseId], references: [id])
+  courseId      Int
+  meetings      Meeting[]
+  schedules     SavedSchedule[]
+
+  @@index([courseId])
+}
+
+model Meeting {
+  id        Int     @id @default(autoincrement())
+  section   Section @relation(fields: [sectionId], references: [id])
+  sectionId Int
+  days      String  @default("") // "TRF"; empty when online = true
+  startMin  Int?    // minutes since midnight; null for "Online async"
+  endMin    Int?
+  location  String? // "UHM POST 318A"; null for online
+  online    Boolean @default(false)
+}
+
+model SavedSchedule {
+  id Int @id @default(autoincrement())
+  name String
+  bookmarked Boolean @default(false)
+  userId Int
+  user User @relation(fields: [userId], references: [id])
+  sections Section[]
+  pos Int  // used to store a schedule's place; 0 = top of list, 1 = next, etc
+}
+
