@@ -83,5 +83,7 @@ model SavedSchedule {
   user User @relation(fields: [userId], references: [id])
   sections Section[]
   pos Int  // used to store a schedule's place; 0 = top of list, 1 = next, etc
+  plannedTerm String   // e.g. "spring-2027" or "fall-2027"; please keep spelling consistent
+
 }
 
