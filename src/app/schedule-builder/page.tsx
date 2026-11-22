@@ -1,13 +1,32 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import type { CSSProperties, FormEvent } from 'react';
-import { generateSchedules, searchCourses } from '../../lib/schedule-builder';
+import { Badge, Button, Modal, Spinner } from 'react-bootstrap';
+import { CheckCircleFill } from 'react-bootstrap-icons';
+import { courseNumber, courseStatus, type CourseStatus } from '@/data/icsCourses';
+import {
+  currentScheduleMonth,
+  generateSchedules,
+  hasScheduleData,
+  scheduleTerms,
+  searchCourses,
+} from '@/lib/schedule-builder';
+import { saveGeneratedSchedule } from '@/lib/saved-schedules';
+
 
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
 const hourHeight = 44;
 const beige = { backgroundColor: '#e8e5da' };
+
+const statusBadge: Record<CourseStatus, string> = {
+  Core: 'success',
+  Undergraduate: 'primary',
+  Graduate: 'info',
+  Noncredit: 'secondary',
+};
+
 const colors = [
   ['#d9ecdf', '#08753b'],
   ['#d9e8f8', '#2568ad'],
@@ -26,16 +45,51 @@ function formatTime(minutes: number) {
   return `${hour % 12 || 12}:${minute} ${hour < 12 ? 'AM' : 'PM'}`;
 }
 
+function subscribeToTermMonth(onChange: () => void) {
+  window.addEventListener('focus', onChange);
+  return () => window.removeEventListener('focus', onChange);
+}
+
+function serverTermMonth() {
+  return null;
+}
+
+function CourseBadges({ code }: { code: string }) {
+  const status = courseStatus(code);
+  const level = courseNumber(code) >= 500 ? 'Graduate' : 'Undergraduate';
+
+  return (
+    <span className="d-flex flex-wrap gap-1 mt-1">
+      <Badge bg={statusBadge[status]}>{status}</Badge>
+      {status === 'Core' && <Badge bg={statusBadge[level]}>{level}</Badge>}
+    </span>
+  );
+}
+
 export default function ScheduleBuilderPage() {
   const [query, setQuery] = useState('');
+  const [chosenTerm, setChosenTerm] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
   const [result, setResult] = useState<ReturnType<typeof generateSchedules> | null>(null);
   const [scheduleIndex, setScheduleIndex] = useState(0);
-  const [message, setMessage] = useState('');
+ const [error, setError] = useState<{
+  title: string;
+  detail: string;
+  courses?: ReturnType<typeof generateSchedules>['unavailableCourses'];
+} | null>(null);
   const [targetCredits, setTargetCredits] = useState('14');
+  const [showSave, setShowSave] = useState(false);
+  const [scheduleName, setScheduleName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedName, setSavedName] = useState('');
+  const [saveError, setSaveError] = useState('');
 
+  const currentMonth = useSyncExternalStore(subscribeToTermMonth, currentScheduleMonth, serverTermMonth);
+  const terms = scheduleTerms(currentMonth);
+  const term = terms.includes(chosenTerm) ? chosenTerm : (terms.find(hasScheduleData) ?? terms[0]);
   const suggestions = searchCourses(query, selected);
   const classes = result?.schedules[scheduleIndex] ?? [];
+  const defaultScheduleName = result ? `${result.term} Schedule ${scheduleIndex + 1}` : '';
   const totalCredits = classes.reduce((total, item) => total + Number(item.credits), 0);
   const blocks = classes.flatMap((section, index) => section.meetings.map((meeting) => ({
     ...meeting,
@@ -50,7 +104,8 @@ export default function ScheduleBuilderPage() {
   function clearResults() {
     setResult(null);
     setScheduleIndex(0);
-    setMessage('');
+    setError(null);
+    setShowSave(false);
   }
 
   function addCourse(code: string) {
@@ -59,32 +114,83 @@ export default function ScheduleBuilderPage() {
     clearResults();
   }
 
+ function openSave() {
+  setScheduleName('');
+  setSavedName('');
+  setSaveError('');
+  setShowSave(true);
+}
+
+async function confirmSave(event: FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+  if (!result || classes.length === 0 || isSaving) return;
+
+  const name = scheduleName.trim() || defaultScheduleName;
+  setSaveError('');
+  setIsSaving(true);
+
+  try {
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 750));
+    saveGeneratedSchedule(name, classes, result.term);
+    setSavedName(name);
+  } catch {
+    setSaveError('Could not save this schedule. Check that browser storage is allowed and try again.');
+  } finally {
+    setIsSaving(false);
+  }
+}
+
   function generate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (selected.length === 0) return;
     clearResults();
 
     const values = new FormData(event.currentTarget);
     const start = timeInputMinutes(values.get('start'));
     const end = timeInputMinutes(values.get('end'));
 
+    if (!hasScheduleData(term)) {
+      setError({
+        title: 'Schedule data unavailable',
+        detail: `EBICSA does not have class sections for ${term} yet. Choose a term with schedule data to generate an option.`,
+      });
+      return;
+    }
+
     if (start >= end) {
-      setMessage('Choose an end time after the start time.');
+      setError({
+        title: 'Check your time window',
+        detail: 'Choose an end time after the start time, then generate again.',
+      });
       return;
     }
 
     const next = generateSchedules(selected, {
+      term,
       days: values.getAll('days').map(String),
       start,
       end,
       format: String(values.get('format')),
     });
 
-    setResult(next);
     if (next.unavailableCourses.length) {
-      setMessage(`No sections fit for ${next.unavailableCourses.join(', ')}. Try changing your days, times, or class format.`);
-    } else if (!next.schedules.length) {
-      setMessage('The selected courses have overlapping sections. Try widening your availability or changing a course.');
+      setError({
+        title: 'Could not schedule every course',
+        detail: `Here’s what prevented these courses from being scheduled for ${term}.`,
+        courses: next.unavailableCourses,
+      });
+      return;
     }
+
+    if (!next.schedules.length) {
+      setError({
+        title: 'Section times overlap',
+        detail: 'Each course has a matching section, but no combination fits without a time conflict. Try widening your availability to include more sections or swapping a course.',
+      });
+      return;
+    }
+
+    setResult(next);
   }
 
   return (
@@ -106,7 +212,7 @@ export default function ScheduleBuilderPage() {
               onSubmit={generate}
               onChange={(event) => {
                 if (event.target instanceof Element
-                  && ['days', 'start', 'end', 'format'].includes(event.target.getAttribute('name') ?? '')) {
+                  && ['term', 'days', 'start', 'end', 'format'].includes(event.target.getAttribute('name') ?? '')) {
                   clearResults();
                 }
               }}
@@ -114,8 +220,18 @@ export default function ScheduleBuilderPage() {
               <h2 className="h5 fw-bold mb-3">Your preferences</h2>
 
               <label htmlFor="term" className="form-label fw-semibold">Term</label>
-              <select id="term" className="form-select rounded-pill mb-3">
-                <option>Spring 2027</option>
+              <select
+                id="term"
+                name="term"
+                className="form-select rounded-pill mb-3"
+                value={term}
+                onChange={(event) => setChosenTerm(event.target.value)}
+              >
+                {terms.map((option) => (
+                  <option key={option} value={option}>
+                    {option}{hasScheduleData(option) ? '' : ' (data unavailable)'}
+                  </option>
+                ))}
               </select>
 
               <label htmlFor="course-search" className="form-label fw-semibold">Find a course</label>
@@ -140,17 +256,28 @@ export default function ScheduleBuilderPage() {
                   style={{ maxHeight: 200 }}
                   aria-label="Course suggestions"
                 >
-                  {suggestions.map(({ code, title }) => (
-                    <li key={code} className="list-group-item p-0">
-                      <button
-                        type="button"
-                        className="btn btn-light w-100 text-start"
-                        onClick={() => addCourse(code)}
-                      >
-                        <strong>{code}</strong> · {title}
-                      </button>
-                    </li>
-                  ))}
+                  {suggestions.map(({ code, title }) => {
+                    const status = courseStatus(code);
+                    const level = courseNumber(code) >= 500 ? 'Graduate' : 'Undergraduate';
+
+                    return (
+                      <li key={code} className="list-group-item p-0">
+                        <button
+                          type="button"
+                          className="btn btn-light w-100 text-start"
+                          onClick={() => addCourse(code)}
+                        >
+                          <strong>{code}</strong> · {title}
+                          <span className="d-flex flex-wrap gap-1 mt-1">
+                            <Badge bg={statusBadge[status]}>{status}</Badge>
+                            {status === 'Core' && (
+                              <Badge bg={statusBadge[level]}>{level}</Badge>
+                            )}
+                          </span>
+                        </button>
+                      </li>
+                    );
+                  })}
                   {suggestions.length === 0 && (
                     <li className="list-group-item small">No courses to add match your search.</li>
                   )}
@@ -240,7 +367,7 @@ export default function ScheduleBuilderPage() {
                 style={{ backgroundColor: '#005435' }}
                 disabled={selected.length === 0}
               >
-                Generate schedules
+                Generate Schedule
               </button>
             </form>
           </aside>
@@ -281,7 +408,7 @@ export default function ScheduleBuilderPage() {
 
               {classes.length === 0 && (
                 <p className="small text-muted mb-2" role="status">
-                  {message || 'Add courses and generate schedules to see your options.'}
+                  Add courses and generate schedules to see your options.
                 </p>
               )}
 
@@ -342,6 +469,7 @@ export default function ScheduleBuilderPage() {
                   <thead style={{ '--bs-table-bg': '#e8e5da' } as CSSProperties}>
                     <tr>
                       <th scope="col" className="ps-3">Course</th>
+                      <th scope="col">Section details</th>
                       <th scope="col">Meeting days</th>
                       <th scope="col">Time and location</th>
                       <th scope="col">Credits</th>
@@ -350,15 +478,20 @@ export default function ScheduleBuilderPage() {
                   <tbody>
                     {classes.length === 0 ? (
                       <tr>
-                        <td colSpan={4} className="py-3 text-center text-muted">
+                        <td colSpan={5} className="py-3 text-center text-muted">
                           Classes will appear here after you generate a schedule.
                         </td>
                       </tr>
                     ) : classes.map((item) => (
                       <tr key={item.crn}>
                         <th scope="row" className="ps-3">
-                          {item.code} <span className="small fw-normal">({item.crn})</span>
+                          {item.code}
+                          <CourseBadges code={item.code} />
                         </th>
+                        <td className="small text-nowrap">
+                          <div>CRN: {item.crn}</div>
+                          <div>Section: {item.section ?? '—'}</div>
+                        </td>
                         <td>{item.meetings.map((meeting) => meeting.days.join(' / ')).join('; ') || '—'}</td>
                         <td>{item.schedule}</td>
                         <td>{item.credits}</td>
@@ -371,14 +504,109 @@ export default function ScheduleBuilderPage() {
               <hr />
 
               <div className="d-flex justify-content-end">
-                <button type="button" className="btn btn-success rounded-pill px-4" disabled>
-                  Save schedule
+                <button
+                  type="button"
+                  className="btn btn-success rounded-pill px-4"
+                  disabled={classes.length === 0}
+                  onClick={openSave}
+                >
+                  Save Schedule
                 </button>
               </div>
             </div>
           </section>
         </div>
       </div>
+
+      <Modal
+        show={error !== null}
+        onHide={() => setError(null)}
+        aria-labelledby="schedule-error-title"
+        aria-describedby="schedule-error-detail"
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title id="schedule-error-title">{error?.title}</Modal.Title>
+        </Modal.Header>
+        <Modal.Body id="schedule-error-detail">
+          {error?.detail}
+          {error?.courses && (
+            <ul className="mt-2 mb-0 ps-3">
+              {error.courses.map(({ code, reason }) => (
+                <li key={code} className="mb-1">
+                  <strong>{code}:</strong> {reason}
+                </li>
+              ))}
+            </ul>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="success" onClick={() => setError(null)}>Back to builder</Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+  show={showSave}
+  onHide={() => setShowSave(false)}
+  backdrop={isSaving ? 'static' : true}
+  keyboard={!isSaving}
+  aria-labelledby="schedule-save-title"
+  centered
+>
+  <Modal.Header closeButton={!isSaving} className={savedName ? 'border-0' : undefined}>
+    <Modal.Title
+      id="schedule-save-title"
+      className={savedName ? 'visually-hidden' : undefined}
+    >
+      {savedName ? 'Schedule saved' : 'Save this schedule?'}
+    </Modal.Title>
+  </Modal.Header>
+
+  {isSaving ? (
+    <Modal.Body className="text-center py-4" role="status">
+      <Spinner animation="border" variant="success" aria-hidden="true" />
+      <p className="mb-0 mt-2">Saving schedule…</p>
+    </Modal.Body>
+  ) : savedName ? (
+    <>
+      <Modal.Body className="text-center py-4" role="status">
+        <CheckCircleFill size={48} className="text-success mb-3" aria-hidden="true" />
+        <p className="h5 mb-2">Saved successfully!</p>
+        <p className="mb-0">“{savedName}” was added to My Schedules in this browser.</p>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="outline-secondary" onClick={() => setShowSave(false)}>
+          Back to builder
+        </Button>
+        <Link href="/my-schedules" className="btn btn-success">
+          Open My Schedules
+        </Link>
+      </Modal.Footer>
+    </>
+  ) : (
+    <form onSubmit={confirmSave}>
+      <Modal.Body>
+        <label htmlFor="schedule-name" className="form-label">Schedule name (optional)</label>
+        <input
+          id="schedule-name"
+          name="schedule-name"
+          className="form-control"
+          placeholder={defaultScheduleName}
+          value={scheduleName}
+          onChange={(event) => setScheduleName(event.target.value)}
+          maxLength={80}
+        />
+        {saveError && <p role="alert" className="text-danger mt-2 mb-0">{saveError}</p>}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button type="button" variant="outline-secondary" onClick={() => setShowSave(false)}>
+          Keep browsing
+        </Button>
+        <Button type="submit" variant="success">Confirm Save</Button>
+      </Modal.Footer>
+    </form>
+  )}
+</Modal>
     </main>
   );
 }
