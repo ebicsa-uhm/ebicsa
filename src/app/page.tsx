@@ -13,7 +13,7 @@ const features = [
     description: `Filter ICS courses by degree pathway, term, format, and credits. 
                   See which prerequisites you've met.`,
     linkText: 'Search Courses',
-    href: '/',
+    href: '/courses',
   },
   {
     icon: <Calendar size={18} />,
@@ -22,7 +22,7 @@ const features = [
                   EBICSA shows weekly schedules with no
                   time conflicts.`,
     linkText: 'Build a schedule',
-    href: '/',
+    href: '/schedule-builder',
   },
   {
     icon: <Bookmark size={18} />,
@@ -30,7 +30,7 @@ const features = [
     description: `Save the schedules you like, bookmark
                   favorites, and compare them side by side.`,
     linkText: 'View saved',
-    href: '/',
+    href: '/my-schedules',
   },
   {
     icon: <ChatSquareTextFill size={18} />,
@@ -78,10 +78,10 @@ const Home = () => (
         </p>
 
         <div className="heroButtons">
-          <Button className="heroBtnFilled rounded-pill px-4">
+          <Button href="/signup" className="heroBtnFilled rounded-pill px-4">
             Get Started
           </Button>
-          <Button className="heroBtnOutline rounded-pill px-4">
+          <Button href="/courses" className="heroBtnOutline rounded-pill px-4">
             Browse Courses
           </Button>
         </div>
