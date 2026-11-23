@@ -6,13 +6,13 @@
   overflow: hidden;
 }
 
-/* Compact, borderless pagination - plain numbers instead of boxed buttons. */
+/* Borderless pagination - plain numbers instead of boxed buttons. */
 .pagination-compact :global(.page-link) {
   border: none;
   background: transparent;
   color: var(--bs-body-color);
-  padding: 0.1rem 0.35rem;
-  font-size: 0.8rem;
+  padding: 0.25rem 0.55rem;
+  font-size: 1.15rem;
 }
 .pagination-compact :global(.page-item.active) :global(.page-link) {
   background: transparent;
@@ -22,6 +22,34 @@
 .pagination-compact :global(.page-item.disabled) :global(.page-link) {
   color: var(--bs-secondary-color);
   background: transparent;
+}
+
+/* View-mode icon toggle - same font height and borderless style as the
+   pagination numbers it sits beside. */
+.view-toggle :global(.btn-link) {
+  border: none;
+  color: var(--bs-secondary-color);
+  padding: 0.25rem 0.55rem;
+  font-size: 1.15rem;
+  line-height: 1.5;
+  text-decoration: none;
+}
+.view-toggle :global(.btn-link:hover) {
+  color: var(--bs-primary);
+}
+.view-toggle :global(.btn-link.active) {
+  color: var(--bs-primary);
+  font-weight: 600;
+}
+
+/* Block-view grid: columns stretch to equal height and cards fill their
+   column instead of keeping the stacked layout's bottom margin. */
+.course-grid :global(.col) {
+  display: flex;
+}
+.course-grid :global(.card) {
+  width: 100%;
+  margin-bottom: 0;
 }
 
 /* Sticky table header while scrolling the course list. */
