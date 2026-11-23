@@ -69,7 +69,7 @@ function minutes(time: string, period: string) {
   return (hour % 12 + (period === 'PM' ? 12 : 0)) * 60 + minute;
 }
 
-function parseSection(course: IcsCourse): Section | null {
+export function parseSection(course: IcsCourse): Section | null {
   if (!course.crn || !course.schedule) return null;
 
   const meetings: Meeting[] = [];
