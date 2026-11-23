@@ -4,9 +4,7 @@ import { hash } from 'bcrypt';
 import * as config from '../config/settings.development.json';
 import { courseParticipation, courseStatus, icsCourses } from './data/icsCourses';
 import type { IcsCourse } from './data/icsCourses';
-import { parseSection } from './lib/schedule-builder';
-
-const dayLetters: Record<string, string> = { Mon: 'M', Tue: 'T', Wed: 'W', Thu: 'R', Fri: 'F' };
+import { parseMeetings } from './lib/parse-meetings';
 
 async function seedCourses() {
   const byCode = new Map<string, IcsCourse[]>();
@@ -52,12 +50,7 @@ async function seedCourses() {
       });
       await prisma.meeting.deleteMany({ where: { sectionId } });
       await prisma.meeting.createMany({
-        data: (parseSection(entry)?.meetings ?? []).map((meeting) => ({
-          days: meeting.days.map((day) => dayLetters[day]).join(''),
-          startMin: meeting.start,
-          endMin: meeting.end,
-          sectionId,
-        })),
+        data: parseMeetings(entry.schedule).map((meeting) => ({ ...meeting, sectionId })),
       });
     }
   }
