@@ -70,10 +70,16 @@ export async function POST(request: Request) {
 
 
 
-    // Start at the first USER message (skips our "Aloha!" greeting), then convert each message
-    // into a Gemini "step": user messages are user_input, assistant messages are model_output
-    const firstUser = history.findIndex((m) => m.role === 'user');
-    const steps = history.slice(firstUser).map((m) => m.role === 'user' ? { type: 'user_input' as const, content: [{ type: 'text' as const, text: m.text }] } 
+    // keep only the most recent messages. A negative number in slice counts from the END,
+    // so slice(-20) = "the last 20" (or the whole array if there are fewer than 20)
+    const recent = history.slice(-MAX_HISTORY_MESSAGES);
+
+    // the cut might end up on an assistant message which will trigger lines above, so start at the first USER message in what's left
+    // (this also still skips the "Aloha!" greeting). Above guarantees the last message is from the user,
+    // so findIndex always finds one and can never return -1 anymore
+    const firstUser = recent.findIndex((m) => m.role === 'user');
+
+    const steps = recent.slice(firstUser).map((m) => m.role === 'user' ? { type: 'user_input' as const, content: [{ type: 'text' as const, text: m.text }] } 
       : { type: 'model_output' as const, content: [{ type: 'text' as const, text: m.text }] },
     );
     const interaction = await ai.interactions.create({ // the REAL API call
