@@ -41,6 +41,20 @@ const ChatWidget = () => {
   }, [messages, isTyping, view]);
 
 
+  //open mini popup whenever a link on the site points to "#chat"
+  useEffect(() => {
+    const openFromLink = () => {
+      if (window.location.hash === '#chat') {
+        setView('mini');
+          // remove "#chat" from the address bar so clicking the same link again still works
+          window.history.replaceState(null, '', window.location.pathname + window.location.search); // rewrites address bar w/o reloading the page. matters bc hashchange only runs when the hash *changes*. if #chat stayed in the URL, clicking the link a 2nd time would do nothing. 
+      }
+    };
+
+    window.addEventListener('hashchange', openFromLink); //tells browser call openFromLink when hash changes
+    return () => window.removeEventListener('hashchange', openFromLink); //cleanup function. react runs this if the widget is ever removed
+  }, []); // the empty [] means to run the event once when the widget first shows up. it sets up the listener once instead of every re-render
+
   //adds a user msg to the chat, then async allows us to put await inside which waits for the reply, then adds it to the arr
   const sendMessage = async (text: string) => {
     const trimmed = text.trim(); //removes spaces at the start/end, so "  " counts as empty
