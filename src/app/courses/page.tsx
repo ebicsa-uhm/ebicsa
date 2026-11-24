@@ -8,10 +8,12 @@ import {
   Card,
   Collapse,
   Container,
+  Dropdown,
   Form,
   Pagination,
   Table,
 } from 'react-bootstrap';
+import { GridFill, List } from 'react-bootstrap-icons';
 import {
   icsCourses,
   courseLevel,
@@ -42,6 +44,60 @@ const STATUS_BADGE: Record<CourseStatus, string> = {
   Noncredit: 'secondary',
 };
 const PAGE_SIZE = 10;
+const BLOCK_PAGE_SIZE = 12;
+
+/** Search scopes shown in the dropdown beside the search bar. */
+const SEARCH_FIELDS: [key: string, label: string][] = [
+  ['all', 'All Fields'],
+  ['alpha', 'Course Alpha'],
+  ['number', 'Course Number'],
+  ['title', 'Course Name'],
+  ['weekday', 'Weekday'],
+  ['crn', 'CRN'],
+  ['professor', 'Professor'],
+];
+
+const WEEKDAY_LETTERS: Record<string, string> = {
+  monday: 'M',
+  tuesday: 'T',
+  wednesday: 'W',
+  thursday: 'R',
+  friday: 'F',
+};
+
+/** Maps a search term to day letters: 'f'/'friday' -> F, 'th'/'thursday' -> R, 'mw' -> MW. */
+const weekdayLetters = (q: string): string => {
+  if (/^[mtwrf]+$/i.test(q)) return q.toUpperCase();
+  const name = Object.keys(WEEKDAY_LETTERS).find((d) => d.startsWith(q) || q.startsWith(d));
+  return name ? WEEKDAY_LETTERS[name] : '';
+};
+
+const matchField = (c: IcsCourse, field: string, q: string): boolean => {
+  const includes = (s?: string) => (s ?? '').toLowerCase().includes(q);
+  switch (field) {
+    case 'alpha':
+      return includes(c.code.split(' ')[0]);
+    case 'number':
+      return includes(c.code.split(' ')[1]);
+    case 'title':
+      return includes(c.title);
+    case 'crn':
+      return includes(c.crn);
+    case 'professor':
+      return includes(c.faculty);
+    case 'weekday': {
+      const letters = weekdayLetters(q);
+      if (!letters) return includes(c.schedule);
+      const days = (c.schedule ?? '')
+        .split(' + ')
+        .map((part) => /^[MTWRF]+/.exec(part)?.[0] ?? '')
+        .join('');
+      return [...letters].every((l) => days.includes(l));
+    }
+    default:
+      return false;
+  }
+};
 
 interface SchedulePattern {
   label: string;
@@ -302,6 +358,8 @@ const CourseBrowser = () => {
   const [sortKey, setSortKey] = useState<SortKey>('code');
   const [sortDir, setSortDir] = useState<1 | -1>(1);
   const [pathwayOpen, setPathwayOpen] = useState(true);
+  const [view, setView] = useState<'table' | 'block'>('table');
+  const [searchField, setSearchField] = useState('all');
   const deferredQuery = useDeferredValue(filters.query);
 
   const setFilter = <K extends keyof Filters>(key: K, value: Filters[K]) => {
@@ -359,11 +417,12 @@ const CourseBrowser = () => {
       if (filters.status !== 'Any' && sectionStatus(c) !== filters.status)
         return false;
       if (!q) return true;
-      return [c.code, c.title, c.faculty, c.notes, c.prerequisites, c.schedule]
-        .filter(Boolean)
-        .some((field) => field!.toLowerCase().includes(q));
+      if (searchField === 'all') {
+        return SEARCH_FIELDS.some(([key]) => key !== 'all' && matchField(c, key, q));
+      }
+      return matchField(c, searchField, q);
     });
-  }, [filters, activePathway, deferredQuery]);
+  }, [filters, activePathway, deferredQuery, searchField]);
 
   const sorted = useMemo(
     () =>
@@ -373,10 +432,24 @@ const CourseBrowser = () => {
     [filtered, sortKey, sortDir]
   );
 
-  const pageCount = Math.ceil(sorted.length / PAGE_SIZE);
+  // Bootstrap's md breakpoint (< 768px = mobile) keeps the 10-per-page list;
+  // block view gets 12 per page on wider screens.
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767.98px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
+
+  const pageSize = view === 'block' && !isMobile ? BLOCK_PAGE_SIZE : PAGE_SIZE;
+  const pageCount = Math.ceil(sorted.length / pageSize);
+  // Switching views or resizing can leave the stored page past the end.
+  const currentPage = Math.min(page, Math.max(pageCount, 1));
   const paged = useMemo(
-    () => sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [sorted, page]
+    () => sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [sorted, currentPage, pageSize]
   );
 
   const activeChips: { label: string; clear: () => void }[] = [];
@@ -412,14 +485,36 @@ const CourseBrowser = () => {
         </Breadcrumb>
         <h1 className="text-center">Search ICS Courses</h1>
 
-        <div className={`d-flex justify-content-center ${styles['no-print']}`}>
+        <div className={`d-flex justify-content-center gap-2 mb-3 ${styles['no-print']}`}>
+          <Dropdown className="flex-shrink-0">
+            <Dropdown.Toggle
+              variant="outline-secondary"
+              className="rounded-pill h-100"
+              id="search-scope"
+              aria-label="Search fields"
+            >
+              <List />
+            </Dropdown.Toggle>
+            <Dropdown.Menu>
+              <Dropdown.Header>Search in</Dropdown.Header>
+              {SEARCH_FIELDS.map(([key, label]) => (
+                <Dropdown.Item
+                  key={key}
+                  active={searchField === key}
+                  onClick={() => setSearchField(key)}
+                >
+                  {label}
+                </Dropdown.Item>
+              ))}
+            </Dropdown.Menu>
+          </Dropdown>
           <Form.Control
             id="course-search"
             type="search"
-            placeholder="Search courses, faculty, notes... (press / to focus)"
+            placeholder={`Search ${SEARCH_FIELDS.find(([key]) => key === searchField)?.[1] ?? 'courses'}`}
             value={filters.query}
             onChange={(e) => setFilter('query', e.target.value)}
-            className="mb-3 rounded-pill"
+            className="rounded-pill w-100"
             aria-label="Search courses"
           />
         </div>
@@ -500,11 +595,6 @@ const CourseBrowser = () => {
           </div>
         )}
 
-        <p className={`text-muted small ${styles['no-print']}`}>
-          Showing {sorted.length} of {icsCourses.length} courses
-          {pageCount > 1 && ` — page ${page} of ${pageCount}`}
-        </p>
-
         {activePathway && (
           <Card className={`mb-3 ${styles['pathway-card']} position-relative`}>
             <Card.Body className="text-center py-2">
@@ -574,67 +664,102 @@ const CourseBrowser = () => {
           <p>No courses match your current filters.</p>
         )}
 
-        {pageCount > 1 && (
-          <div className={`d-flex justify-content-end mb-3 ${styles['no-print']}`}>
-            <Pagination size="sm" className={`${styles['pagination-compact']} mb-0`}>
+        <div className={`d-flex justify-content-between align-items-center mb-3 ${styles['no-print']}`}>
+          <div className={styles['view-toggle']} role="group" aria-label="View mode">
+            <Button
+              variant="link"
+              className={view === 'table' ? 'active' : ''}
+              onClick={() => setView('table')}
+              aria-pressed={view === 'table'}
+              aria-label="Table view"
+              title="Table view"
+            >
+              <List />
+            </Button>
+            <Button
+              variant="link"
+              className={view === 'block' ? 'active' : ''}
+              onClick={() => setView('block')}
+              aria-pressed={view === 'block'}
+              aria-label="Block view"
+              title="Block view"
+            >
+              <GridFill />
+            </Button>
+          </div>
+          {pageCount > 1 && (
+            <Pagination className={`${styles['pagination-compact']} mb-0`}>
               <Pagination.Prev
-                disabled={page <= 1}
+                disabled={currentPage <= 1}
                 onClick={() => setPage((p) => p - 1)}
               />
               {Array.from({ length: pageCount }, (_, i) => (
                 <Pagination.Item
                   key={i}
-                  active={page === i + 1}
+                  active={currentPage === i + 1}
                   onClick={() => setPage(i + 1)}
                 >
                   {i + 1}
                 </Pagination.Item>
               ))}
               <Pagination.Next
-                disabled={page >= pageCount}
+                disabled={currentPage >= pageCount}
                 onClick={() => setPage((p) => p + 1)}
               />
             </Pagination>
-          </div>
-        )}
-
-        <Table
-          striped
-          hover
-          className={`${styles['course-table']} align-middle d-none d-md-table`}
-        >
-          <thead>
-            <tr>
-              <th style={{ width: '2.5rem' }}>
-                <span className="visually-hidden">Details</span>
-              </th>
-              <SortableTh label="Course #" sortKey="code" {...thProps} />
-              <SortableTh label="Title" sortKey="title" {...thProps} />
-              <SortableTh label="Status" sortKey="status" {...thProps} className="text-center" />
-              <SortableTh label="Faculty" sortKey="faculty" {...thProps} />
-              <th>Location</th>
-              <th>Prerequisites</th>
-              <SortableTh label="Meets" sortKey="meets" {...thProps} className={styles['meets-col']} />
-              <SortableTh label="Participation" sortKey="participation" {...thProps} />
-            </tr>
-          </thead>
-          <tbody>
-            {paged.map((c) => (
-              <CourseRow key={c.crn ?? c.code} course={c} />
-            ))}
-          </tbody>
-        </Table>
-
-        <div className={`${styles['course-cards']} d-md-none`}>
-          {paged.map((c) => (
-            <CourseCard key={c.crn ?? c.code} course={c} />
-          ))}
+          )}
         </div>
 
-        <p className="text-muted text-center small mt-4">
-          University of Hawaiʻi at Mānoa &mdash; Information and Computer
-          Sciences. Spring 2027 schedules and faculty compiled from Star GPS
-          (Jan 11 &ndash; May 14, 2027).
+        {view === 'table' && (
+          <>
+            <Table
+              striped
+              hover
+              className={`${styles['course-table']} align-middle d-none d-md-table`}
+            >
+              <thead>
+                <tr>
+                  <th style={{ width: '2.5rem' }}>
+                    <span className="visually-hidden">Details</span>
+                  </th>
+                  <SortableTh label="Course #" sortKey="code" {...thProps} />
+                  <SortableTh label="Title" sortKey="title" {...thProps} />
+                  <SortableTh label="Status" sortKey="status" {...thProps} className="text-center" />
+                  <SortableTh label="Faculty" sortKey="faculty" {...thProps} />
+                  <th>Location</th>
+                  <th>Prerequisites</th>
+                  <SortableTh label="Meets" sortKey="meets" {...thProps} className={styles['meets-col']} />
+                  <SortableTh label="Participation" sortKey="participation" {...thProps} />
+                </tr>
+              </thead>
+              <tbody>
+                {paged.map((c) => (
+                  <CourseRow key={c.crn ?? c.code} course={c} />
+                ))}
+              </tbody>
+            </Table>
+
+            <div className={`${styles['course-cards']} d-md-none`}>
+              {paged.map((c) => (
+                <CourseCard key={c.crn ?? c.code} course={c} />
+              ))}
+            </div>
+          </>
+        )}
+
+        {view === 'block' && (
+          <div
+            className={`${styles['course-cards']} ${styles['course-grid']} row row-cols-1 row-cols-md-3 row-cols-xl-4 g-2`}
+          >
+            {paged.map((c) => (
+              <div className="col" key={c.crn ?? c.code}>
+                <CourseCard course={c} />
+              </div>
+            ))}
+          </div>
+        )}
+        <p className={`text-muted small ${styles['no-print']}`}>
+          Showing {sorted.length} of {icsCourses.length} courses
         </p>
       </Container>
     </main>
