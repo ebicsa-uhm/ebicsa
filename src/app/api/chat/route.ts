@@ -16,6 +16,26 @@ const MAX_HISTORY_MESSAGES = 20;   // how many recent messages Gemini actually s
 // small helper so every "bad input" answer looks the same
 const badRequest = (reason: string) => Response.json({ error: reason }, { status: 400 });
 
+// the only parts of a Message the server needs. Pick<Type, 'a' | 'b'> copies just those fields from Message
+type IncomingMessage = Pick<Message, 'role' | 'text'>;
+
+// a "type guard": returns true/false, and the `m is IncomingMessage` return type tells TypeScript
+// "if this returned true, treat m as an IncomingMessage from now on"
+const isValidMessage = (m: unknown): m is IncomingMessage => { //this return type allows TS to narrow the type for us. the same way that Array.isArray does below
+  if (typeof m !== 'object' || m === null) return false;  // same object check as step 1
+  if (!('role' in m) || !('text' in m)) return false;     // both keys must exist
+  if (typeof m.text !== 'string') return false;           // text must be a string (not a number, array, etc.)
+
+  if (m.role === 'user') {
+    // user text can't be only spaces, and can't be over the cap
+    return m.text.trim().length > 0 && m.text.length <= MAX_USER_CHARS;
+  }
+  if (m.role === 'assistant') {
+    return m.text.length <= MAX_ASSISTANT_CHARS;
+  }
+  return false; // any other role ('system', 'admin', 123...) is rejected
+};
+
 
 
 const SYS_INSTRUCTIONS = 'You are EBICSA, a friendly academic advising assistant for Information and Computer Sciences (ICS) ' +
@@ -35,7 +55,19 @@ export async function POST(request: Request) {
     if (body.history.length === 0 || body.history.length > MAX_INCOMING_MESSAGES) {
       return badRequest('history has too few or too many messages');
     }
-    const history = body.history;
+    const history: unknown[] = body.history; // unknown[] = "an array, but we haven't checked what's inside yet"
+
+    // .every(fxn) is true only if fxn returns true for EVERY item. Because isValidMessage is a type 'guard',
+    // after this check TypeScript knows history is IncomingMessage[]
+    if (!history.every(isValidMessage)) {
+      return badRequest('Each message needs a role of user or assistant and text within the length limit');
+    }
+
+    // .at(-1) gets the last item. ?. means "if it's undefined, stop and give undefined instead of crashing"
+    if (history.at(-1)?.role !== 'user') {
+      return badRequest('The last message must be from the user');
+    }
+
 
 
     // Start at the first USER message (skips our "Aloha!" greeting), then convert each message
