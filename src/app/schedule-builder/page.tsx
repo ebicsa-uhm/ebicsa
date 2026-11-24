@@ -14,11 +14,15 @@ import {
   searchCourses,
 } from '@/lib/schedule-builder';
 import { saveGeneratedSchedule } from '@/lib/saved-schedules';
+import type { CoursePreferences } from '@/lib/schedule-builder';
+import CoursePreferencesModal from './course-preferences';
+import styles from '../my-schedules/my-schedules.module.css';
 
 
 const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-const hourHeight = 44;
-const beige = { backgroundColor: '#e8e5da' };
+const hourHeight = 50;
+const beige = { backgroundColor: '#e8e5df' };
+const primaryGreen = { backgroundColor: '#064b38', color: 'white' };
 
 const statusBadge: Record<CourseStatus, string> = {
   Core: 'success',
@@ -70,6 +74,8 @@ export default function ScheduleBuilderPage() {
   const [query, setQuery] = useState('');
   const [chosenTerm, setChosenTerm] = useState('');
   const [selected, setSelected] = useState<string[]>([]);
+  const [editingCourse, setEditingCourse] = useState<string | null>(null);
+  const [byCourse, setByCourse] = useState<Record<string, CoursePreferences>>({});
   const [result, setResult] = useState<ReturnType<typeof generateSchedules> | null>(null);
   const [scheduleIndex, setScheduleIndex] = useState(0);
  const [error, setError] = useState<{
@@ -97,8 +103,8 @@ export default function ScheduleBuilderPage() {
     crn: section.crn,
     colors: colors[index % colors.length],
   })));
-  const firstHour = Math.min(9, ...blocks.map((block) => Math.floor(block.start / 60)));
-  const lastHour = Math.max(16, ...blocks.map((block) => Math.ceil(block.end / 60)));
+  const firstHour = Math.min(8, ...blocks.map((block) => Math.floor(block.start / 60)));
+  const lastHour = Math.max(20, ...blocks.map((block) => Math.ceil(block.end / 60)));
   const hours = Array.from({ length: lastHour - firstHour }, (_, index) => firstHour + index);
 
   function clearResults() {
@@ -113,6 +119,16 @@ export default function ScheduleBuilderPage() {
     setQuery('');
     clearResults();
   }
+
+   function updateCoursePreferences(code: string, preferences?: CoursePreferences) {
+    setByCourse((current) => {
+      const next = { ...current };
+      if (preferences) next[code] = preferences;
+      else delete next[code];
+      return next;
+    });
+    clearResults();
+  } 
 
  function openSave() {
   setScheduleName('');
@@ -165,12 +181,13 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
       return;
     }
 
-    const next = generateSchedules(selected, {
+      const next = generateSchedules(selected, {
       term,
       days: values.getAll('days').map(String),
       start,
       end,
       format: String(values.get('format')),
+      byCourse,
     });
 
     if (next.unavailableCourses.length) {
@@ -194,21 +211,17 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
   }
 
   return (
-    <main className="py-4 py-lg-5" style={{ backgroundColor: '#f5f2ef' }}>
-      <div className="container" style={{ maxWidth: 1168 }}>
-        <header className="row align-items-center gy-2 mb-4">
-          <div className="col-md-3 small">
-            <Link href="/" className="link-success">Home</Link>
-            {' / Schedule Builder'}
-          </div>
-          <h1 className="col-md-6 h2 fw-bold text-md-center mb-0">Schedule Builder</h1>
+        <main className={styles.page}>
+      <div>
+        <header className={styles.titleBar}>
+          <span><Link href="/">Home</Link> / Schedule Builder</span>
+          <h1>Schedule Builder</h1>
         </header>
 
         <div className="row g-3 align-items-start">
-          <aside className="col-lg-4 col-xl-auto" style={{ maxWidth: 340 }}>
+          <aside className="col-lg-4 col-xl-3">
             <form
-              className="p-3 rounded-3"
-              style={beige}
+              className={styles.card}
               onSubmit={generate}
               onChange={(event) => {
                 if (event.target instanceof Element
@@ -217,7 +230,7 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
                 }
               }}
             >
-              <h2 className="h5 fw-bold mb-3">Your preferences</h2>
+              <h2 className="mb-3">Your preferences</h2>
 
               <label htmlFor="term" className="form-label fw-semibold">Term</label>
               <select
@@ -284,19 +297,28 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
                 </ul>
               )}
 
-              <ul className="list-unstyled d-flex flex-wrap gap-2 mt-2 mb-3" aria-label="Selected courses">
+                            <ul className="list-unstyled d-flex flex-wrap gap-2 mt-2 mb-3" aria-label="Selected courses">
                 {selected.map((code) => (
-                  <li key={code}>
+                  <li key={code} className="btn-group">
                     <button
                       type="button"
-                      className="btn btn-sm btn-outline-success rounded-pill"
+                      className={`btn btn-sm ${byCourse[code] ? 'btn-success' : 'btn-outline-success'}`}
+                      aria-label={`Edit ${code} preferences${byCourse[code] ? ' (custom)' : ''}`}
+                      aria-haspopup="dialog"
+                      onClick={() => setEditingCourse(code)}
+                    >
+                      {code}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline-success"
                       aria-label={`Remove ${code}`}
                       onClick={() => {
                         setSelected((courses) => courses.filter((course) => course !== code));
-                        clearResults();
+                        updateCoursePreferences(code);
                       }}
                     >
-                      {code} ×
+                      ×
                     </button>
                   </li>
                 ))}
@@ -361,10 +383,10 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
                 </div>
               </fieldset>
 
-              <button
+                            <button
                 type="submit"
-                className="btn w-100 rounded-pill fw-semibold text-white"
-                style={{ backgroundColor: '#005435' }}
+                className="btn w-100 rounded-pill"
+                style={primaryGreen}
                 disabled={selected.length === 0}
               >
                 Generate Schedule
@@ -373,9 +395,9 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
           </aside>
 
           <section className="col-lg">
-            <div className="border rounded-3 p-3">
+            <div className={styles.card}>
               <div className="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
-                <h2 className="h5 fw-bold mb-0" aria-live="polite">
+                <h2 className="mb-0" aria-live="polite">
                   {classes.length
                     ? `${totalCredits} credits${targetCredits ? ` / ${targetCredits} target` : ''}`
                     : 'Weekly schedule'}
@@ -408,25 +430,29 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
 
               {classes.length === 0 && (
                 <p className="small text-muted mb-2" role="status">
-                  Add courses and generate schedules to see your options.
+                  Add courses and press generate to see your schedule!
                 </p>
               )}
 
-              <div className="overflow-auto border rounded-3 bg-white" aria-hidden="true">
+              <div
+                className="overflow-auto border rounded-3 bg-white"
+                style={{ '--bs-border-color': '#dedbd4' } as CSSProperties}
+                aria-hidden="true"
+              >
                 <div
                   className="d-grid"
                   style={{ gridTemplateColumns: '94px repeat(5, minmax(105px, 1fr))', minWidth: 619 }}
                 >
-                  <div className="p-2 fw-semibold small border-end" style={beige}>Time</div>
+                  <div className="p-2 fw-semibold border-end" style={beige}>Time</div>
                   {weekdays.map((day) => (
-                    <div key={day} className="p-2 text-center fw-semibold small border-end" style={beige}>
+                    <div key={day} className="p-2 text-center fw-semibold border-end" style={beige}>
                       {day}
                     </div>
                   ))}
 
                   <div className="border-end">
                     {hours.map((hour) => (
-                      <div key={hour} className="border-top px-2 pt-1 small" style={{ height: hourHeight }}>
+                      <div key={hour} className="border-top px-2 pt-1 text-nowrap" style={{ height: hourHeight }}>
                         {formatTime(hour * 60)}
                       </div>
                     ))}
@@ -451,7 +477,7 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
                           }}
                         >
                           <div className="small fw-bold">{block.code}</div>
-                          <div style={{ fontSize: '0.7rem' }}>
+                          <div className="small">
                             {formatTime(block.start)}–{formatTime(block.end)}
                           </div>
                         </div>
@@ -463,10 +489,10 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
 
               <hr />
 
-              <h2 className="h6 fw-bold">Classes in this schedule</h2>
+              <h3>Classes in this schedule</h3>
               <div className="table-responsive border rounded-3">
                 <table className="table table-sm align-middle mb-0">
-                  <thead style={{ '--bs-table-bg': '#e8e5da' } as CSSProperties}>
+                  <thead style={{ '--bs-table-bg': '#e8e5df' } as CSSProperties}>
                     <tr>
                       <th scope="col" className="ps-3">Course</th>
                       <th scope="col">Section details</th>
@@ -479,7 +505,7 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
                     {classes.length === 0 ? (
                       <tr>
                         <td colSpan={5} className="py-3 text-center text-muted">
-                          Classes will appear here after you generate a schedule.
+                          No classes yet...
                         </td>
                       </tr>
                     ) : classes.map((item) => (
@@ -504,9 +530,10 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
               <hr />
 
               <div className="d-flex justify-content-end">
-                <button
+                                <button
                   type="button"
-                  className="btn btn-success rounded-pill px-4"
+                  className="btn rounded-pill px-4"
+                  style={primaryGreen}
                   disabled={classes.length === 0}
                   onClick={openSave}
                 >
@@ -518,6 +545,20 @@ async function confirmSave(event: FormEvent<HTMLFormElement>) {
         </div>
       </div>
 
+            {editingCourse && (
+        <CoursePreferencesModal
+          key={editingCourse}
+          code={editingCourse}
+          weekdays={weekdays}
+          preferences={byCourse[editingCourse]}
+          onClose={() => setEditingCourse(null)}
+          onApply={(preferences) => {
+            updateCoursePreferences(editingCourse, preferences);
+            setEditingCourse(null);
+          }}
+        />
+      )}
+      
       <Modal
         show={error !== null}
         onHide={() => setError(null)}

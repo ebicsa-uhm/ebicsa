@@ -109,9 +109,23 @@ function overlaps(a: Meeting, b: Meeting) {
     && a.days.some((day) => b.days.includes(day));
 }
 
+export type CoursePreferences = {
+  days?: string[];
+  format?: string;
+  start?: number;
+  end?: number;
+};
+
 export function generateSchedules(
   courses: string[],
-  preferences: { term: string; days: string[]; start: number; end: number; format: string },
+  preferences: {
+    term: string;
+    days: string[];
+    start: number;
+    end: number;
+    format: string;
+    byCourse?: Record<string, CoursePreferences | undefined>;
+  },
 ) {
   const schedules: Section[][] = [];
   const unavailableCourses: { code: string; reason: string }[] = [];
@@ -138,9 +152,21 @@ const choices = courses.map((code) => {
     );
   }
 
-  const matchingFormat = offered.filter((section) => (
-    !preferences.format || courseParticipation(section) === preferences.format
-  ));
+    const override = preferences.byCourse?.[code];
+    const days = override?.days ?? preferences.days;
+    const format = override?.format ?? preferences.format;
+    const start = override?.start ?? preferences.start;
+    const end = override?.end ?? preferences.end;
+
+    if (start >= end) {
+      return unavailable(
+        'This course’s start time must be before its end time. Check its preferences and the builder’s time window.',
+      );
+    }
+
+    const matchingFormat = offered.filter((section) => (
+      !format || courseParticipation(section) === format
+    ));
 
   if (matchingFormat.length === 0) {
     const formats = [...new Set(offered.map(courseParticipation))].join(', ');
@@ -156,7 +182,7 @@ const choices = courses.map((code) => {
   }
 
   const matchingDays = scheduled.filter((section) => section.meetings.every((meeting) => (
-    meeting.days.every((day) => preferences.days.includes(day))
+    meeting.days.every((day) => days.includes(day))
   )));
 
   if (matchingDays.length === 0) {
@@ -166,7 +192,7 @@ const choices = courses.map((code) => {
   }
 
   const eligible = matchingDays.filter((section) => section.meetings.every((meeting) => (
-    meeting.start >= preferences.start && meeting.end <= preferences.end
+    meeting.start >= start && meeting.end <= end
   )));
 
   if (eligible.length === 0) {
