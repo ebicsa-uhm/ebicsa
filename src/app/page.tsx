@@ -4,7 +4,7 @@ import CardBody from 'react-bootstrap/CardBody';
 import CardTitle from 'react-bootstrap/CardTitle';
 import CardText from 'react-bootstrap/CardText';
 import CardLink from 'react-bootstrap/CardLink';
-//import { auth } from '@/auth';
+import { auth } from '@/lib/auth';
 
 /* FOR THE CARD */
 const features = [
@@ -45,7 +45,10 @@ const features = [
 ];
 
 /** The Landing page. */
-const Home = () => (
+const Home = async () => {
+  
+  const session = await auth();
+  return(
   <main>
     {/* Top image */}
     <div style={{ position: 'relative' }}>
@@ -79,9 +82,11 @@ const Home = () => (
         </p>
 
         <div className="heroButtons">
-          <Button href="/signup" className="heroBtnFilled rounded-pill px-4">
+          {!session?.user && (
+          <Button href="/auth/signup" className="heroBtnFilled rounded-pill px-4">
             Get Started
           </Button>
+          )}
           <Button href="/courses" className="heroBtnOutline rounded-pill px-4">
             Browse Courses
           </Button>
@@ -115,6 +120,8 @@ const Home = () => (
       </Row>
     </Container>
   </main>
-);
+  );
+};
+
 
 export default Home;
