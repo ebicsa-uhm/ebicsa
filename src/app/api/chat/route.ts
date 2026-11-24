@@ -2,13 +2,14 @@
 // This file runs ONLY on the server, so GEMINI_API_KEY is never sent to the browser
 import { GoogleGenAI } from '@google/genai'
 import type { AssistantReply, Message } from '@/components/chat/types'
+import { MAX_USER_CHARS } from '@/components/chat/limits'
+
 
 //process.env reads variables from .env. this only works on the server which is why the call is here and not in the widget
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
 const MODEL = 'gemini-3.5-flash-lite'; //can replace the model we use here, stay with gemini-3.5-flash-lite for faster replies and cheapest usage for our API
 // limits for what we accept from the browser and what we forward to Gemini
-const MAX_USER_CHARS = 1000;       // longest question a student can send
 const MAX_ASSISTANT_CHARS = 4000;  // longest earlier AI reply we'll accept back from the widget
 const MAX_INCOMING_MESSAGES = 100; // more than this isn't a real chat, so reject it
 const MAX_HISTORY_MESSAGES = 20;   // how many recent messages Gemini actually sees
