@@ -4,7 +4,7 @@ import CardBody from 'react-bootstrap/CardBody';
 import CardTitle from 'react-bootstrap/CardTitle';
 import CardText from 'react-bootstrap/CardText';
 import CardLink from 'react-bootstrap/CardLink';
-//import { auth } from '@/auth';
+import { auth } from '@/lib/auth';
 
 /* FOR THE CARD */
 const features = [
@@ -45,7 +45,18 @@ const features = [
 ];
 
 /** The Landing page. */
-const Home = () => (
+const Home = async () => {
+  
+  const session = await auth();
+
+  const signInHref = '/auth/signin';
+
+  const linkFor = (href: string) => {
+    if (session?.user || href.startsWith('#')) return href;
+    return `${signInHref}?callbackUrl=${encodeURIComponent(href)}`;
+  };
+  
+  return(
   <main>
     {/* Top image */}
     <div style={{ position: 'relative' }}>
@@ -79,9 +90,11 @@ const Home = () => (
         </p>
 
         <div className="heroButtons">
-          <Button href="/signup" className="heroBtnFilled rounded-pill px-4">
+          {!session?.user && (
+          <Button href="/auth/signup" className="heroBtnFilled rounded-pill px-4">
             Get Started
           </Button>
+          )}
           <Button href="/courses" className="heroBtnOutline rounded-pill px-4">
             Browse Courses
           </Button>
@@ -107,7 +120,7 @@ const Home = () => (
                 <div className="icon-box mb-3">{f.icon}</div>
                 <CardTitle className="fw-bold">{f.title}</CardTitle>
                 <CardText className="text-muted">{f.description}</CardText>
-                <CardLink href={f.href}>{f.linkText} →</CardLink>
+                  <CardLink href={linkFor(f.href)}>{f.linkText} →</CardLink>
               </CardBody>
             </Card>
           </Col>
@@ -115,6 +128,8 @@ const Home = () => (
       </Row>
     </Container>
   </main>
-);
+  );
+};
+
 
 export default Home;
