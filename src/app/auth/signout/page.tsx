@@ -14,7 +14,7 @@ const SignOut = () => (
             <div className="signin-image-text">
               <div className="smallStuff1">EBICSA</div>
               <h2 className="bigStuff1">
-                Leaving so soon? <span className="bigStuff2">Your plan stays saved.</span>
+                Why are you leaving.
               </h2>
               <p className="smallStuff2">
                 Your setup, saved schedules, and chat history will be here when you sign back in.
