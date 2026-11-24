@@ -56,6 +56,7 @@ CREATE TABLE "SavedSchedule" (
     "bookmarked" BOOLEAN NOT NULL DEFAULT false,
     "userId" INTEGER NOT NULL,
     "pos" INTEGER NOT NULL,
+    "plannedTerm" TEXT NOT NULL,
 
     CONSTRAINT "SavedSchedule_pkey" PRIMARY KEY ("id")
 );

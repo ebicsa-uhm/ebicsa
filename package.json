@@ -12,6 +12,7 @@
     "playwright": "npx playwright test"
   },
   "dependencies": {
+    "@google/genai": "^3.6.1",
     "@hookform/resolvers": "^5.2.2",
     "@prisma/adapter-pg": "^7.4.2",
     "@prisma/client": "^7.4.2",
