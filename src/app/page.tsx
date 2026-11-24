@@ -120,7 +120,7 @@ const Home = async () => {
                 <div className="icon-box mb-3">{f.icon}</div>
                 <CardTitle className="fw-bold">{f.title}</CardTitle>
                 <CardText className="text-muted">{f.description}</CardText>
-                <CardLink href={f.href}>{f.linkText} →</CardLink>
+                  <CardLink href={linkFor(f.href)}>{f.linkText} →</CardLink>
               </CardBody>
             </Card>
           </Col>
