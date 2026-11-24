@@ -4,7 +4,7 @@ import CardBody from 'react-bootstrap/CardBody';
 import CardTitle from 'react-bootstrap/CardTitle';
 import CardText from 'react-bootstrap/CardText';
 import CardLink from 'react-bootstrap/CardLink';
-import { auth } from '@/auth';
+//import { auth } from '@/auth';
 
 /* FOR THE CARD */
 const features = [
@@ -40,7 +40,7 @@ const features = [
                   course covers, what you need before taking
                   it, and more!`,
     linkText: 'See the assistant',
-    href: '/',
+    href: '#chat',
   },
 ];
 

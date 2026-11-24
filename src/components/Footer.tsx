@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Container } from 'react-bootstrap';
+import { Col, Container, Row } from 'react-bootstrap';
 
 const team = [
   { name: 'Chicco', email: 'chicco@hawaii.edu' },
@@ -27,8 +27,18 @@ const Footer = () => (
         </a>
       </nav>
     </Container>
-    <Container className="d-flex flex-wrap justify-content-between gap-3">
-      Hi
+    <Container className="pt-5 d-flex flex-wrap justify-content-between gap-3">
+      <strong className="d-block mb-3 text-end">CONTACT US</strong>
+    </Container>
+    <Container className="d-flex flex-wrap justify-content-between">
+      <Row xs={1} sm={2} md={4} className="g-3">
+        {team.map((member) => (
+          <Col key={member.email}>
+            <div className="fw-semibold">{member.name}</div>
+            <a href={`mailto:${member.email}`}>{member.email}</a>
+          </Col>
+        ))}
+      </Row>
     </Container>
   </footer>
 );
