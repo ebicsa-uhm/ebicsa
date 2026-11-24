@@ -1,6 +1,8 @@
 // fake AI answers until milestone 2, replace the body of getAssistantReply with a call
 // to our /api/chat route. The widget calls it the same way, so the widget code won't need to change.
 import type { AssistantReply, Message } from './types';
+import { MAX_HISTORY_MESSAGES } from './limits';
+
 
 // // Pauses for `ms` milliseconds, pretending to be the time a real AI takes to answer.
 // const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -55,7 +57,9 @@ export const getAssistantReply = async (history: Message[]): Promise<AssistantRe
   const response = await fetch('/api/chat', { // '/api/chat' = src/app/api/chat/route.ts on our own server
     method: 'POST', // POST = "here's data for you", which matches the POST function exported in route.ts
     headers: { 'Content-Type': 'application/json' }, // tells the server the body below is json
-    body: JSON.stringify({ history }), // request bodies are plain text, so stringify turns our object into a json string
+    
+      // only send the recent part of the chat; the server ignores older messages anyway, so this keeps requests small
+    body: JSON.stringify({ history: history.slice(-MAX_HISTORY_MESSAGES) }), // request bodies are plain text, so stringify turns our object into a json string
   });
 
   // response.ok is true for success codes (200-299) and false for errors like 500 from the route's catch

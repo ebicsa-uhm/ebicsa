@@ -2,7 +2,7 @@
 // This file runs ONLY on the server, so GEMINI_API_KEY is never sent to the browser
 import { GoogleGenAI } from '@google/genai'
 import type { AssistantReply, Message } from '@/components/chat/types'
-import { MAX_USER_CHARS } from '@/components/chat/limits'
+import { MAX_HISTORY_MESSAGES, MAX_USER_CHARS } from '@/components/chat/limits'
 
 
 //process.env reads variables from .env. this only works on the server which is why the call is here and not in the widget
@@ -12,7 +12,6 @@ const MODEL = 'gemini-3.5-flash-lite'; //can replace the model we use here, stay
 // limits for what we accept from the browser and what we forward to Gemini
 const MAX_ASSISTANT_CHARS = 4000;  // longest earlier AI reply we'll accept back from the widget
 const MAX_INCOMING_MESSAGES = 100; // more than this isn't a real chat, so reject it
-const MAX_HISTORY_MESSAGES = 20;   // how many recent messages Gemini actually sees
 
 // small helper so every "bad input" answer looks the same
 const badRequest = (reason: string) => Response.json({ error: reason }, { status: 400 });
@@ -75,7 +74,7 @@ export async function POST(request: Request) {
     // so slice(-20) = "the last 20" (or the whole array if there are fewer than 20)
     const recent = history.slice(-MAX_HISTORY_MESSAGES);
 
-    // the cut might end up on an assistant message which will trigger lines above, so start at the first USER message in what's left
+    // the cut at the start might end up on an assistant message which will trigger lines above, so start at the first USER message in what's left
     // (this also still skips the "Aloha!" greeting). Above guarantees the last message is from the user,
     // so findIndex always finds one and can never return -1 anymore
     const firstUser = recent.findIndex((m) => m.role === 'user');
@@ -97,7 +96,8 @@ export async function POST(request: Request) {
     }
 
     // normal case: send the reply back to the widget as json
-    const reply: AssistantReply = { text };
+    // never send back a reply longer than isValidMessage accepts, or the student's NEXT message would be rejected
+    const reply: AssistantReply = { text: text.slice(0, MAX_ASSISTANT_CHARS) };
     return Response.json(reply);
   } catch (error) {
     // anything that failed above (bad key, rate limit, network) goes here
