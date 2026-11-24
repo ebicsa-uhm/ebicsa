@@ -14,7 +14,6 @@ import {
   Table,
 } from 'react-bootstrap';
 import { GridFill, List } from 'react-bootstrap-icons';
-import { parseMeetings } from '@/lib/parse-meetings';
 import {
   icsCourses,
   courseLevel,
@@ -89,8 +88,9 @@ const matchField = (c: IcsCourse, field: string, q: string): boolean => {
     case 'weekday': {
       const letters = weekdayLetters(q);
       if (!letters) return includes(c.schedule);
-      const days = parseMeetings(c.schedule)
-        .map((m) => m.days)
+      const days = (c.schedule ?? '')
+        .split(' + ')
+        .map((part) => /^[MTWRF]+/.exec(part)?.[0] ?? '')
         .join('');
       return [...letters].every((l) => days.includes(l));
     }
