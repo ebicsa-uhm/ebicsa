@@ -48,6 +48,14 @@ const features = [
 const Home = async () => {
   
   const session = await auth();
+
+  const signInHref = '/auth/signin';
+
+  const linkFor = (href: string) => {
+    if (session?.user || href.startsWith('#')) return href;
+    return `${signInHref}?callbackUrl=${encodeURIComponent(href)}`;
+  };
+  
   return(
   <main>
     {/* Top image */}
