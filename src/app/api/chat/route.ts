@@ -7,6 +7,16 @@ import type { AssistantReply, Message } from '@/components/chat/types'
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
 const MODEL = 'gemini-3.5-flash-lite'; //can replace the model we use here, stay with gemini-3.5-flash-lite for faster replies and cheapest usage for our API
+// limits for what we accept from the browser and what we forward to Gemini
+const MAX_USER_CHARS = 1000;       // longest question a student can send
+const MAX_ASSISTANT_CHARS = 4000;  // longest earlier AI reply we'll accept back from the widget
+const MAX_INCOMING_MESSAGES = 100; // more than this isn't a real chat, so reject it
+const MAX_HISTORY_MESSAGES = 20;   // how many recent messages Gemini actually sees
+
+// small helper so every "bad input" answer looks the same
+const badRequest = (reason: string) => Response.json({ error: reason }, { status: 400 });
+
+
 
 const SYS_INSTRUCTIONS = 'You are EBICSA, a friendly academic advising assistant for Information and Computer Sciences (ICS) ' +
   'students at the University of Hawaiʻi at Mānoa. Keep answers short and clear. ' +
@@ -15,7 +25,18 @@ const SYS_INSTRUCTIONS = 'You are EBICSA, a friendly academic advising assistant
 //next.js calls this function for POST requests to /api/chat
 export async function POST(request: Request) {
   try {
-    const { history } = (await request.json()) as { history: Message[] };
+        // .catch(() => null): if the body isn't valid JSON, use null instead of crashing into the 500 catch below
+    const body: unknown = await request.json().catch(() => null);
+
+    // check the shape before touching it: must be an object that has a "history" array
+    if (typeof body !== 'object' || body === null || !('history' in body) || !Array.isArray(body.history)) {
+      return badRequest('Request must include a history array');
+    }
+    if (body.history.length === 0 || body.history.length > MAX_INCOMING_MESSAGES) {
+      return badRequest('history has too few or too many messages');
+    }
+    const history = body.history;
+
 
     // Start at the first USER message (skips our "Aloha!" greeting), then convert each message
     // into a Gemini "step": user messages are user_input, assistant messages are model_output
