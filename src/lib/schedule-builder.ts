@@ -56,7 +56,6 @@ function normalizeSearch(value: string) {
 
 export function searchCourses(query: string, selected: string[]) {
   const term = normalizeSearch(query);
-  if (!term) return [];
 
   return courseOptions.filter(({ code, title }) => (
     !selected.includes(code)

@@ -31,31 +31,24 @@ export default function CoursePreferencesModal({
   const [error, setError] = useState('');
 
   function apply(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  event.preventDefault();
 
-    const values = new FormData(event.currentTarget);
-    const days = values.getAll('days').map(String);
-    const format = String(values.get('format'));
-    const start = readTime(values.get('start'));
-    const end = readTime(values.get('end'));
+  const values = new FormData(event.currentTarget);
+  const start = readTime(values.get('start'));
+  const end = readTime(values.get('end'));
 
-    if (start !== undefined && end !== undefined && start >= end) {
-      setError('Choose an end time after the start time.');
-      return;
-    }
-
-    if (days.length === 0 && format === 'inherit' && start === undefined && end === undefined) {
-      onApply();
-      return;
-    }
-
-    onApply({
-      days: days.length ? days : undefined,
-      format: format === 'inherit' ? undefined : format,
-      start,
-      end,
-    });
+  if (start === undefined || end === undefined || start >= end) {
+    setError('Choose a start time and an end time after it.');
+    return;
   }
+
+  onApply({
+    days: values.getAll('days').map(String),
+    format: String(values.get('format') ?? ''),
+    start,
+    end,
+  });
+}
 
   return (
     <Modal show onHide={onClose} centered aria-labelledby="course-preferences-title">
@@ -81,7 +74,6 @@ export default function CoursePreferencesModal({
                 </label>
               ))}
             </div>
-            <p className="form-text mb-0">Leave all days unchecked to use the builder’s days.</p>
           </fieldset>
 
           <label className="form-label fw-semibold" htmlFor="course-format">Class format</label>
@@ -89,9 +81,8 @@ export default function CoursePreferencesModal({
             id="course-format"
             name="format"
             className="form-select mb-3"
-            defaultValue={preferences?.format ?? 'inherit'}
+            defaultValue={preferences?.format ?? ''}
           >
-            <option value="inherit">Use builder setting</option>
             <option value="">Any format</option>
             <option value="In-Person">In person</option>
             <option>Online</option>
@@ -110,7 +101,6 @@ export default function CoursePreferencesModal({
                 <input className="form-control" type="time" name="end" defaultValue={inputTime(preferences?.end)} />
               </label>
             </div>
-            <p className="form-text mb-0">Blank times use the builder’s time window.</p>
           </fieldset>
 
           {error && <p className="text-danger mt-2 mb-0" role="alert">{error}</p>}
@@ -118,7 +108,7 @@ export default function CoursePreferencesModal({
 
         <Modal.Footer>
           <Button type="button" variant="outline-secondary" onClick={() => onApply()}>
-            Use builder defaults
+            Use default
           </Button>
           <Button type="submit" variant="success">Apply preferences</Button>
         </Modal.Footer>
