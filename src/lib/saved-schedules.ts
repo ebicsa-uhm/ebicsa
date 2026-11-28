@@ -1,6 +1,7 @@
 export type SavedCourse = {
   code: string;
   crn: string;
+  section?: string;
   credits: number;
   schedule?: string;
   meetings: { days: string[]; start: number; end: number }[];
@@ -9,6 +10,7 @@ export type SavedCourse = {
 export type SavedSchedule = {
   id: string;
   name: string;
+  term?: string;
   bookmarked: boolean;
   courses: SavedCourse[];
 };
@@ -63,14 +65,20 @@ export function updateSavedSchedules(
 
 type GeneratedCourse = Omit<SavedCourse, 'credits'> & { credits: number | string };
 
-export function saveGeneratedSchedule(name: string, courses: readonly GeneratedCourse[]) {
+export function saveGeneratedSchedule(
+  name: string,
+  courses: readonly GeneratedCourse[],
+  term?: string,
+) {
   const schedule: SavedSchedule = {
     id: window.crypto.randomUUID(),
     name,
+    term,
     bookmarked: false,
-    courses: courses.map(({ code, crn, credits, schedule: meetingLabel, meetings }) => ({
+    courses: courses.map(({ code, crn, section, credits, schedule: meetingLabel, meetings }) => ({
       code,
       crn,
+      section,
       credits: Number(credits),
       schedule: meetingLabel,
       meetings,
