@@ -7,6 +7,8 @@ import type { Message } from "./types"; //import type means this is only used fo
 import { useEffect, useRef, useState } from "react"; // useRef = handle to a real page element, useEffect = run code after the page updates
 import { ArrowRight, ArrowsAngleContract, ArrowsAngleExpand, ChatDotsFill, DashLg, XLg } from "react-bootstrap-icons"; 
 import { getAssistantReply } from "./placeholderReplies";
+import { MAX_USER_CHARS } from "./limits";
+
 
 type ChatView = 'closed' | 'mini' | 'expanded'; // the only 3 views the widget can be in
 
@@ -128,12 +130,20 @@ const ChatWidget = () => {
           placeholder="Ask about a course or prerequisite..." 
           aria-label="Message the chat assistant" 
           value={draft} 
+          maxLength={MAX_USER_CHARS} // the browser itself stops typing/pasting past this many characters
           onChange={(event) => setDraft(event.target.value)} // onChange={. . .} means that on every keystroke, draft is updated to what's in the box. event.target is the input element, and .value is its current text
         />
         <Button type="submit" variant="success" aria-label="Send message" disabled={draft.trim() === '' || isTyping}> {/* the disabled={} greys out button when box is empty AND when assistant is typing a response*/}
           <ArrowRight/>
         </Button>
       </InputGroup>
+      {/* only show the counter once they're 80% of the way to the limit, so it doesn't clutter normal use */}
+      {draft.length > MAX_USER_CHARS * 0.8 && (
+        <Form.Text className={draft.length >= MAX_USER_CHARS ? 'text-danger' : 'text-muted'}>
+          {draft.length}/{MAX_USER_CHARS} characters
+        </Form.Text>
+      )}
+
     </Form>
   );
 
